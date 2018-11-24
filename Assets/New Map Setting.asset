@@ -13,7 +13,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoUpdate: 0
   normalizeMode: 0
-  chunkSizeIndex: 0
+  chunkSizeIndex: 4
   flatshadedChunkSizeIndex: 1
   useFlatShading: 0
   useFalloff: 0

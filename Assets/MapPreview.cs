@@ -62,7 +62,6 @@ public class MapPreview : MonoBehaviour {
         {
             DrawMapInEditor();
         }
-        setting.ApplyToMaterial(terrainMaterial);
     }
 
     void OnValidate()
@@ -71,7 +70,6 @@ public class MapPreview : MonoBehaviour {
         {
             setting.OnValuesUpdated -= OnValuesUpdated;
             setting.OnValuesUpdated += OnValuesUpdated;
-
         }
     }
 }

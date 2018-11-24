@@ -47,9 +47,10 @@ public class MapSetting : UpdatebleData
     {
         get
         {
-            return supportedChunkSizes[(useFlatShading) ? flatshadedChunkSizeIndex : chunkSizeIndex] + 1;
+            return supportedChunkSizes[(useFlatShading) ? flatshadedChunkSizeIndex : chunkSizeIndex] + 5;
         }
     }
+
     public float meshWorldSize
     {
         get { return (numVertsPerLine - 3) * meshScale; }
@@ -68,11 +69,6 @@ public class MapSetting : UpdatebleData
         {
             return meshScale * heightMultiplier * heightCurve.Evaluate(1);
         }
-    }
-
-    public void ApplyToMaterial(Material material)
-    {
-
     }
 
     public void UpdateMaterial(Material material)
