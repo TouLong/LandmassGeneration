@@ -1,9 +1,8 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
 public static class Noise
 {
-    public enum NormalizeMode { Local,Global};
+    public enum NormalizeMode { Global, Local};
     public static float[,] GenrateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset,NormalizeMode normalizeMode)
     {
         float[,] noiseMap = new float[mapWidth, mapHeight];
@@ -69,9 +68,8 @@ public static class Noise
                 }
                 else
                 {
-                    float normalizedHeight = (noiseMap[x, y] + 1) / (maxPossibleHeight );
-                    noiseMap[x, y] = Mathf.Clamp01(normalizedHeight);
-                    
+                    float normalizedHeight = (noiseMap[x, y] + 1) / (maxPossibleHeight / 0.9f);
+                    noiseMap[x, y] = Mathf.Clamp(normalizedHeight, 0, int.MaxValue);
                 }
             }
         }
