@@ -2,15 +2,9 @@
 
 public static class MeshGenerator
 {
-    public const int numSupportedLODs = 5;
-    public const int numSupportedChunkSizes = 9;
-    public const int numSupportedFlatshadedChunkSizes = 3;
-    public static readonly int[] supportedChunkSizes = { 48, 72, 96, 120, 144, 168, 192, 216, 240 };
-    public static readonly int[] supportedFlatshadedChunkSizes = { 48, 72, 96 };
 
-    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve curve, int lod,bool useFlatShading)
+    public static MeshData GenerateTerrainMesh(float[,] heightMap, MapSetting setting, int lod)
     {
-        AnimationCurve heightCurve = new AnimationCurve(curve.keys);
 
         int meshSI = (lod == 0) ? 1 : lod * 2;//Mesh Simplification Increment
 
@@ -23,7 +17,7 @@ public static class MeshGenerator
 
         int verticesPerLine = (meshSize - 1) / meshSI + 1;
 
-        MeshData meshData = new MeshData(verticesPerLine, useFlatShading);
+        MeshData meshData = new MeshData(verticesPerLine, setting.useFlatShading);
 
         int[,] vertexIndicesMap = new int[borderedSize, borderedSize];
         int meshVertexIndex = 0;
@@ -54,8 +48,7 @@ public static class MeshGenerator
             {
                 int vertexIndex = vertexIndicesMap[x, y];
                 Vector2 percent = new Vector2((x- meshSI) / (float)meshSize, (y - meshSI) / (float)meshSize);
-                float height = heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier;
-                Vector3 vertexPosition = new Vector3(topLeftX + percent.x * meshSizeUnsimplified, height, topLeftZ - percent.y * meshSizeUnsimplified);
+                Vector3 vertexPosition = new Vector3((topLeftX + percent.x * meshSizeUnsimplified) * setting.meshScale, heightMap[x, y], (topLeftZ - percent.y * meshSizeUnsimplified) * setting.meshScale);
 
                 meshData.AddVertex(vertexPosition, percent, vertexIndex);
 
@@ -189,13 +182,9 @@ public class MeshData
     public void ProcessMesh()
     {
         if (useFlatShading)
-        {
             FlatShading();
-        }
         else
-        {
             BakeNormal();
-        }
     }
 
     void BakeNormal()
@@ -225,13 +214,10 @@ public class MeshData
         mesh.triangles = triangles;
         mesh.uv = uvs;
         if (useFlatShading)
-        {
             mesh.RecalculateNormals();
-        }
         else
-        {
             mesh.normals = bakedNormals;
-        }
+
         return mesh;
     }
 }
