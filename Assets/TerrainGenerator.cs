@@ -1,111 +1,106 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
+using System.Linq;
 
-public class TerrainGenerator : MonoBehaviour {
-
-    const float viewerMoveTreshold = 25f;
-    const float sqrViewerMoveTreshold = viewerMoveTreshold * viewerMoveTreshold;
-
-    public int colliderLODIndex;
-    public LODInfo[] detailOfLevels;
-
-    public MapSetting setting;
-
-    public Transform viewer;
-    public Material mapMaterial;
-
-    Vector2 viewerPosittion;
-    Vector2 viewerPosittionOld;
-
-    float meshWolrdSize;
-    int chunksVisibleInViewDst;
-
-    Dictionary<Vector2, TerrainChunk> terrainChunkDictionary = new Dictionary<Vector2, TerrainChunk>();
+public class TerrainGenerator : MonoBehaviour
+{
+    MapSetting setting;
+    Material mapMaterial;
+    List<Vector2> chunkNoiseMinMax = new List<Vector2>();
+    List<Vector2> chunkMapMinMax = new List<Vector2>();
+    public Vector2 terrainNoiseMinMax;
+    public Vector2 terrainMapMinMax;
     List<TerrainChunk> terrainChunkList = new List<TerrainChunk>();
 
-    void Start()
+    private bool Initialization()
     {
-        setting.UpdateMaterial(mapMaterial);
-        float maxViewDist = detailOfLevels[detailOfLevels.Length - 1].visibleDstThreshold;
-        meshWolrdSize = setting.meshWorldSize;
-        chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDist / meshWolrdSize);
-        UpdateVisibleChunks();
+        if (mapMaterial == null)
+            if (Shader.Find("Custom/Terrain") != null)
+                mapMaterial = new Material(Shader.Find("Custom/Terrain"));
+            else
+            {
+                Debug.Log("揾吾到著色器");
+                return false;
+            }
+        if (setting == null)
+            if (GetComponent<MapSetting>() != null)
+                setting = GetComponent<MapSetting>();
+            else
+            {
+                Debug.Log("冇MapSetting");
+                return false;
+            }
+        return true;
     }
 
-    void Update()
+    public void GenerateChunks()
     {
-        viewerPosittion = new Vector2(viewer.position.x, viewer.position.z);
-
-        if (viewerPosittion != viewerPosittionOld)
+        if (!Initialization())
         {
-            foreach(TerrainChunk chunk in terrainChunkList)
+            return;
+        }
+        int meshSize = setting.meshWorldSize;
+        ClearChunk();
+        for (int y = 0; y < setting.numChunk; y++)
+        {
+            for (int x = 0; x < setting.numChunk; x++)
             {
-                chunk.UpdateCollisionMesh();
+                Vector2 chunkCoord = new Vector2((x - (setting.numChunk - 1) / 2f) * meshSize, (y - (setting.numChunk - 1) / 2f) * meshSize);
+                TerrainChunk newChunk = new TerrainChunk(chunkCoord, setting, transform, mapMaterial);
+                terrainChunkList.Add(newChunk);
+                chunkNoiseMinMax.Add(newChunk.noiseMinMax);
+                chunkMapMinMax.Add(newChunk.mapMinMax);
             }
         }
-
-        if ((viewerPosittionOld - viewerPosittion).sqrMagnitude > sqrViewerMoveTreshold)
-        {
-            viewerPosittionOld = viewerPosittion;
-            UpdateVisibleChunks();
-        }
+        terrainNoiseMinMax = new Vector2(chunkNoiseMinMax.Min(x => x.x), chunkNoiseMinMax.Max(x => x.y));
+        terrainMapMinMax = new Vector2(chunkMapMinMax.Min(x => x.x), chunkMapMinMax.Max(x => x.y));
+        UpdateMaterial();
     }
 
-    void UpdateVisibleChunks()
+    public void ClearChunk()
     {
-        HashSet<Vector2> alreadyUpdatedChunkCoords = new HashSet<Vector2>();
-        for (int i = terrainChunkList.Count - 1; i >= 0; i--)
-        {
-            alreadyUpdatedChunkCoords.Add(terrainChunkList[i].coord);
-            terrainChunkList[i].UpdateTerrainChunk();
-        }
-
-        int currentChunkCoordX = Mathf.RoundToInt(viewerPosittion.x / meshWolrdSize);
-        int currentChunkCoordY = Mathf.RoundToInt(viewerPosittion.y / meshWolrdSize);
-
-        for(int yOffset = -chunksVisibleInViewDst; yOffset <= chunksVisibleInViewDst; yOffset++)
-        {
-            for (int xOffset = -chunksVisibleInViewDst; xOffset <= chunksVisibleInViewDst; xOffset++)
-            {
-                Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
-                if (!alreadyUpdatedChunkCoords.Contains(viewedChunkCoord))
-                {
-                    if (terrainChunkDictionary.ContainsKey(viewedChunkCoord))
-                    {
-                        terrainChunkDictionary[viewedChunkCoord].UpdateTerrainChunk();
-                    }
-                    else
-                    {
-                        TerrainChunk newChunk = new TerrainChunk(viewedChunkCoord, setting, detailOfLevels, colliderLODIndex, transform, viewer, mapMaterial);
-                        terrainChunkDictionary.Add(viewedChunkCoord, newChunk);
-                        newChunk.onVisilityChanged += OnTerrainChunkVisiblilityChanged;
-                        newChunk.Load();
-                    }
-                }
-            }
-
-        }
+        chunkMapMinMax.Clear();
+        chunkNoiseMinMax.Clear();
+        terrainChunkList.Clear();
+        while (transform.childCount != 0)
+            DestroyImmediate(transform.GetChild(0).gameObject);
     }
 
-    void OnTerrainChunkVisiblilityChanged(TerrainChunk chunk,bool isVisible)
+
+    public void UpdateMaterial()
     {
-        if (isVisible) terrainChunkList.Add(chunk);
-        else terrainChunkList.Remove(chunk);
+        mapMaterial.SetInt("layerCount",setting.layers.Length);
+        mapMaterial.SetColorArray("baseColors", setting.layers.Select(x => x.color).ToArray());
+        mapMaterial.SetFloatArray("baseStartHeights", setting.layers.Select(x => x.heights).ToArray());
+        mapMaterial.SetFloatArray("baseBlends", setting.layers.Select(x => x.blendStrength).ToArray());
+
+        mapMaterial.SetFloat("minHeight", terrainMapMinMax.x);
+        mapMaterial.SetFloat("maxHeight", terrainMapMinMax.y);
     }
 
 }
 
-[System.Serializable]
-public struct LODInfo
+[CustomEditor(typeof(TerrainGenerator))]
+public class TerrainGeneratorEditor : Editor
 {
-    [Range(0, MapSetting.numSupportedLODs - 1)]
-    public int lod;
-    public float visibleDstThreshold;
-    public float sqrVisbleDistThreshold
+    public override void OnInspectorGUI()
     {
-        get
+        base.OnInspectorGUI();
+        TerrainGenerator terrainGenerator = (TerrainGenerator)target;
+
+        if (GUILayout.Button("Generate"))
         {
-            return visibleDstThreshold * visibleDstThreshold;
+            terrainGenerator.GenerateChunks();
         }
+        if (GUILayout.Button("Update Material"))
+        {
+            terrainGenerator.UpdateMaterial();
+        }
+        if (GUILayout.Button("Clear"))
+        {
+            terrainGenerator.ClearChunk();
+        }
+
     }
 }
