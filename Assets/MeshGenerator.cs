@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public static class MeshGenerator
 {
@@ -46,7 +45,7 @@ public static class MeshGenerator
                 int vertexIndex = vertexIndicesMap[x, y];
                 Vector2 percent = new Vector2((x - 1) / (float)meshSize, (y - 1) / (float)meshSize);
                 float height = heightMap[x, y];
-                Vector3 vertexPosition = new Vector3((topLeftX + percent.x * meshSize) * setting.meshScale, height, (topLeftZ - percent.y * meshSize) * setting.meshScale);
+                Vector3 vertexPosition = new Vector3((topLeftX + percent.x * meshSize), height, (topLeftZ - percent.y * meshSize) );
 
                 meshData.AddVertex(vertexPosition, percent, vertexIndex);
 
