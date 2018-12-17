@@ -5,20 +5,19 @@ using System.Linq;
 
 public class TerrainGenerator : MonoBehaviour
 {
-    [HideInInspector]
-    public MapSetting setting;
+    [HideInInspector] public MapSetting setting;
+    [HideInInspector] public List<TerrainChunk> terrainChunkList = new List<TerrainChunk>();
+    [HideInInspector] public float noisePeakMin;
+    [HideInInspector] public float noisePeakMax;
+    [HideInInspector] public float mapPeakMin;
+    [HideInInspector] public float mapPeakMax;
+    [HideInInspector] public Texture2D texture;
     Material mapMaterial;
-    public List<TerrainChunk> terrainChunkList = new List<TerrainChunk>();
-
-    [HideInInspector]
-    public Vector2 noiseMinMax;
-    [HideInInspector]
-    public Vector2 mapMinMax;
-    [HideInInspector]
-    public Texture2D texture;
     GameObject terrain;
     GameObject mapObject;
+
     public GameObject testPlacement;
+    public Vector2 treeRange;
 
     private bool Initialization()
     {
@@ -55,25 +54,27 @@ public class TerrainGenerator : MonoBehaviour
         List<Vector2> chunkNoiseMinMax = new List<Vector2>();
         List<Vector2> chunkMapMinMax = new List<Vector2>();
         int meshSize = setting.chunkSideLength;
-        for (int x = 0; x < setting.mapDimension; x++)
+        for (int y = 0; y < setting.mapDimension; y++)
         {
-            for (int y = 0; y < setting.mapDimension; y++)
+            for (int x = 0; x < setting.mapDimension; x++)
             {
-                Vector2 chunkPos = new Vector2((x - (setting.mapDimension - 1) / 2f) * meshSize, (y - (setting.mapDimension - 1) / 2f) * meshSize);
+                Vector2 chunkPos = new Vector2(x * meshSize, y * meshSize);
                 TerrainChunk newChunk = new TerrainChunk(chunkPos, setting, terrain.transform, mapMaterial);
                 terrainChunkList.Add(newChunk);
                 chunkNoiseMinMax.Add(newChunk.noiseMinMax);
             }
         }
-        noiseMinMax = new Vector2(chunkNoiseMinMax.Min(x => x.x), chunkNoiseMinMax.Max(x => x.y));
+        noisePeakMin = chunkNoiseMinMax.Min(x => x.x);
+        noisePeakMax = chunkNoiseMinMax.Max(x => x.y);
         foreach(TerrainChunk chunk in terrainChunkList)
         {
-            chunk.Create(noiseMinMax);
+            chunk.Create(new Vector2(noisePeakMin, noisePeakMax));
             chunkMapMinMax.Add(chunk.mapMinMax);
         }
-        mapMinMax = new Vector2(chunkMapMinMax.Min(x => x.x), chunkMapMinMax.Max(x => x.y));
+        mapPeakMin = chunkMapMinMax.Min(x => x.x);
+        mapPeakMax = chunkMapMinMax.Max(x => x.y);
         terrain.transform.localScale = new Vector3(setting.mapSize, 1, setting.mapSize);
-        texture = MapImage.Generate(setting, terrainChunkList.Select(x=>x.mapHeight).ToList(), setting.mapSize);
+        texture = MapImage.Generate(setting, terrainChunkList.Select(x => x.mapHeight).ToList(), setting.mapSize);
         UpdateMaterial();
     }
 
@@ -86,12 +87,6 @@ public class TerrainGenerator : MonoBehaviour
                 DestroyImmediate(terrain.transform.GetChild(0).gameObject);
             DestroyImmediate(terrain);
         }
-        if (mapObject != null)
-        {
-            while (mapObject.transform.childCount != 0)
-                DestroyImmediate(mapObject.transform.GetChild(0).gameObject);
-            DestroyImmediate(mapObject);
-        }
     }
 
     public void UpdateMaterial()
@@ -101,19 +96,32 @@ public class TerrainGenerator : MonoBehaviour
         mapMaterial.SetFloatArray("baseStartHeights", setting.layers.Select(x => x.height).ToArray());
         mapMaterial.SetFloatArray("baseBlends", setting.layers.Select(x => x.blendStrength).ToArray());
 
-        mapMaterial.SetFloat("minHeight", mapMinMax.x + terrain.transform.position.y);
-        mapMaterial.SetFloat("maxHeight", mapMinMax.y + terrain.transform.position.y);
+        mapMaterial.SetFloat("minHeight", mapPeakMin + terrain.transform.position.y);
+        mapMaterial.SetFloat("maxHeight", mapPeakMax + terrain.transform.position.y);
     }
 
     public void PDS()
     {
+        if (mapObject != null)
+        {
+            while (mapObject.transform.childCount != 0)
+                DestroyImmediate(mapObject.transform.GetChild(0).gameObject);
+            DestroyImmediate(mapObject);
+        }
         if (mapObject == null)
             mapObject = new GameObject("Map Object");
-        List<Vector2> points = PoissonDiscSampling.GeneratePoints(2.5f, new Vector2(setting.mapSideLength, setting.mapSideLength));
-        for(int i = 0; i < points.Count; i++)
+        List<Vector2> points = PoissonDiscSampling.GeneratePoints(1.5f, new Vector2(setting.mapSideLength, setting.mapSideLength));
+        RaycastHit raycastHit;
+        float heightTemp;
+        for (int i = 0; i < points.Count; i++)
         {
-            GameObject newGO = Instantiate(testPlacement, mapObject.transform);
-            newGO.transform.position = new Vector3(points[i].x, setting.heightScale, points[i].y);
+            Physics.Raycast(new Vector3(points[i].x, mapPeakMax + 1, points[i].y), Vector3.down, out raycastHit);
+            heightTemp = raycastHit.point.y;
+            if (heightTemp <= treeRange.y * mapPeakMax && heightTemp >= treeRange.x * mapPeakMax)
+            {
+                GameObject newGO = Instantiate(testPlacement, mapObject.transform);
+                newGO.transform.position = new Vector3(points[i].x, raycastHit.point.y, points[i].y);
+            }
         }
     }
 
@@ -123,7 +131,7 @@ public class TerrainGenerator : MonoBehaviour
         
         for (int i = 0; i < setting.layers.Count; i++)
         {
-            layerHeight.Add(setting.layers[i].height * (mapMinMax.y - mapMinMax.x) + mapMinMax.x);
+            layerHeight.Add(setting.layers[i].height * (mapPeakMax - mapPeakMin) + mapPeakMin);
         }
 
         float[] heightCount = new float[setting.layers.Count];
@@ -168,7 +176,7 @@ public class TerrainGeneratorEditor : Editor
         TerrainGenerator terrain = (TerrainGenerator)target;
 
         EditorGUILayout.LabelField(string.Format("地圖尺寸 : {0}x{0}  地圖高度 : {1}~{2}  Noise範圍 : {3:0.00}~{4:0.00}",
-          terrain.setting.mapSideLength, terrain.mapMinMax.x, terrain.mapMinMax.y, terrain.noiseMinMax.x, terrain.noiseMinMax.y));
+          terrain.setting.mapSideLength, terrain.mapPeakMin, terrain.mapPeakMax, terrain.noisePeakMin, terrain.noisePeakMax));
 
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Generate"))
@@ -178,10 +186,10 @@ public class TerrainGeneratorEditor : Editor
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button("Update Material"))
-            terrain.UpdateMaterial();
         if (GUILayout.Button("PDS"))
             terrain.PDS();
+        if (GUILayout.Button("Update Material"))
+            terrain.UpdateMaterial();
         EditorGUILayout.EndHorizontal();
 
         heightCurve = terrain.setting.heightCurve;

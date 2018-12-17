@@ -16,20 +16,20 @@ public class MapImage
         int chunkSize = setting.chunkSideLength * scale;
         Color[] colorMap = new Color[chunkSize * chunkSize];
 
-        for (int w = 0; w < dim; w++)
+        for (int h = 0; h < dim; h++)
         {
-            for (int h = 0; h < dim; h++)
+            for (int w = 0; w < dim; w++)
             {
-                for (int x = 0; x < chunkSize; x++)
+                for (int y = 0; y < chunkSize; y++)
                 {
-                    for (int y = 0; y < chunkSize; y++)
+                    for (int x = 0; x < chunkSize; x++)
                     {
                         for (int i = setting.layers.Count - 1; i >= 0; i--)
                         {
-                            if (chunkHegihts[w * dim + h].values[x / scale, y / scale] >= setting.layers[i].height * maxHeight)
+                            if (chunkHegihts[h * dim + w].values[x / scale, y / scale] >= setting.layers[i].height * maxHeight)
                             {
                                 Color c = setting.layers[i].color;
-                                colorMap[(chunkSize - y - 1) * chunkSize + x] = new Color(c.r, c.g, c.b, 1);
+                                colorMap[y * chunkSize + x] = new Color(c.r, c.g, c.b, 1);
                                 break;
                             }
                         }

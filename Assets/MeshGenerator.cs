@@ -8,12 +8,7 @@ public static class MeshGenerator
 
         int meshSize = borderedSize - 2;
 
-        float topLeftX = (meshSize - 1) / -2f;
-        float topLeftZ = (meshSize - 1) / 2f;
-
-        int verticesPerLine = meshSize;
-
-        MeshData meshData = new MeshData(verticesPerLine);
+        MeshData meshData = new MeshData(meshSize);
 
         int[,] vertexIndicesMap = new int[borderedSize, borderedSize];
         int meshVertexIndex = 0;
@@ -45,15 +40,18 @@ public static class MeshGenerator
                 int vertexIndex = vertexIndicesMap[x, y];
                 Vector2 percent = new Vector2((x - 1) / (float)meshSize, (y - 1) / (float)meshSize);
                 float height = heightMap[x, y];
-                Vector3 vertexPosition = new Vector3((topLeftX + percent.x * meshSize), height, (topLeftZ - percent.y * meshSize) );
+                //Vector3 vertexPosition = new Vector3(percent.x * meshSize, height, (1 - percent.y) * meshSize);
+                Vector3 vertexPosition = new Vector3(percent.x * meshSize, height, percent.y * meshSize);
 
                 meshData.AddVertex(vertexPosition, percent, vertexIndex);
 
                 if (x < borderedSize - 1 && y < borderedSize - 1)
                 {
                     int a = vertexIndicesMap[x, y];
-                    int b = vertexIndicesMap[x + 1, y];
-                    int c = vertexIndicesMap[x, y + 1];
+                    //int b = vertexIndicesMap[x + 1, y];
+                    //int c = vertexIndicesMap[x, y + 1];                    
+                    int b = vertexIndicesMap[x, y + 1];
+                    int c = vertexIndicesMap[x + 1, y];
                     int d = vertexIndicesMap[x + 1, y + 1];
                     meshData.AddTriangle(a, d, c);
                     meshData.AddTriangle(d, a, b);

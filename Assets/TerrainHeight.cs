@@ -17,7 +17,7 @@ public static class NoiseHeight
         for (int i = 0; i < setting.octaves; i++)
         {
             float offsetX = prng.Next(-100000, 100000) + setting.offset.x + sampleCentre.x;
-            float offsetY = prng.Next(-100000, 100000) - setting.offset.y - sampleCentre.y;
+            float offsetY = prng.Next(-100000, 100000) + setting.offset.y + sampleCentre.y;
             octaveOffsets[i] = new Vector2(offsetX, offsetY);
 
             maxPossibleHeight += amplitude;
@@ -25,8 +25,6 @@ public static class NoiseHeight
         }
         float noiseMin = float.MaxValue;
         float noiseMax = float.MinValue;
-
-        float half = size / 2f ;
 
         for (int y = 0; y < size; y++)
         {
@@ -38,8 +36,8 @@ public static class NoiseHeight
 
                 for (int i = 0; i < setting.octaves; i++)
                 {
-                    float sampleX = (x - half + octaveOffsets[i].x) / setting.noiseScale * frequency;
-                    float sampleY = (y - half + octaveOffsets[i].y) / setting.noiseScale * frequency;
+                    float sampleX = (x + octaveOffsets[i].x) / setting.noiseScale * frequency;
+                    float sampleY = (y + octaveOffsets[i].y) / setting.noiseScale * frequency;
 
                     float perlinValue = Mathf.PerlinNoise(sampleX, sampleY);
                     noiseHeight += perlinValue * amplitude;
