@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PoissonDiscSampling
 {
-    public static List<Vector2> GeneratePoints(float radius, Vector2 sampleRegionSize, int reject = 30)
+    public static List<Vector2> GeneratePoints(float radius, Vector2 sampleRegionSize, int reject = 15)
     {
         float cellSize = radius / Mathf.Sqrt(2);
         int[,] grid = new int[Mathf.CeilToInt(sampleRegionSize.x / cellSize), Mathf.CeilToInt(sampleRegionSize.y / cellSize)];

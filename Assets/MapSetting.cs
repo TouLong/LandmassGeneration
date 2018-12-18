@@ -39,6 +39,7 @@ public class MapSetting : MonoBehaviour
         get { return (chunkVertexs - 3) * mapDimension; }
     }
 
+    public List<MapObject> mapObjects = new List<MapObject>();
     public AnimationCurve heightCurve;
     public List<Layer> layers = new List<Layer>();
     [System.Serializable]
@@ -68,5 +69,18 @@ public class MapSetting : MonoBehaviour
             this.height = height;
             this.color = color;
         }
+    }
+
+    [System.Serializable]
+    public struct MapObject
+    {
+        public GameObject[] objects;
+        public MapObjectDistribute[] distribute;
+    }
+    [System.Serializable]
+    public struct MapObjectDistribute
+    {
+        public Vector2 range;
+        public float radius;
     }
 }

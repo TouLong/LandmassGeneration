@@ -43,7 +43,7 @@
 			//}
 			for (int i = 0; i < layerCount; i++) 
 			{
-				float drawStrength = inverseLerp(-baseBlends[i] / 200 - epsilon, baseBlends[i] / 200, heightPercent - baseStartHeights[i]);
+				float drawStrength = inverseLerp(-baseBlends[i] / 10 - epsilon, baseBlends[i] / 10, heightPercent - baseStartHeights[i]);
 				o.Albedo = o.Albedo * (1 - drawStrength) + baseColors[i] * drawStrength;
 			}
 		}

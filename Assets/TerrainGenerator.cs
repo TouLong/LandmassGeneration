@@ -16,9 +16,6 @@ public class TerrainGenerator : MonoBehaviour
     GameObject terrain;
     GameObject mapObject;
 
-    public GameObject testPlacement;
-    public Vector2 treeRange;
-
     private bool Initialization()
     {
         if (mapMaterial == null)
@@ -110,17 +107,23 @@ public class TerrainGenerator : MonoBehaviour
         }
         if (mapObject == null)
             mapObject = new GameObject("Map Object");
-        List<Vector2> points = PoissonDiscSampling.GeneratePoints(1.5f, new Vector2(setting.mapSideLength, setting.mapSideLength));
-        RaycastHit raycastHit;
-        float heightTemp;
-        for (int i = 0; i < points.Count; i++)
+        foreach (MapSetting.MapObject mapObj in setting.mapObjects)
         {
-            Physics.Raycast(new Vector3(points[i].x, mapPeakMax + 1, points[i].y), Vector3.down, out raycastHit);
-            heightTemp = raycastHit.point.y;
-            if (heightTemp <= treeRange.y * mapPeakMax && heightTemp >= treeRange.x * mapPeakMax)
+            foreach (MapSetting.MapObjectDistribute dist in mapObj.distribute)
             {
-                GameObject newGO = Instantiate(testPlacement, mapObject.transform);
-                newGO.transform.position = new Vector3(points[i].x, raycastHit.point.y, points[i].y);
+                List<Vector2> points = PoissonDiscSampling.GeneratePoints(dist.radius, new Vector2(setting.mapSideLength, setting.mapSideLength));
+                RaycastHit raycastHit;
+                float heightTemp;
+                for (int i = 0; i < points.Count; i++)
+                {
+                    Physics.Raycast(new Vector3(points[i].x, mapPeakMax + 1, points[i].y), Vector3.down, out raycastHit);
+                    heightTemp = raycastHit.point.y;
+                    if (heightTemp <= dist.range.y * mapPeakMax / 100 && heightTemp >= dist.range.x * mapPeakMax / 100) 
+                    {
+                        GameObject newGO = Instantiate(mapObj.objects[Random.Range(0, mapObj.objects.Length)], mapObject.transform);
+                        newGO.transform.position = new Vector3(points[i].x, raycastHit.point.y, points[i].y);
+                    }
+                }
             }
         }
     }
