@@ -15,9 +15,9 @@ public class MapSetting : MonoBehaviour
     public float persistance = 0.5f;
     [Range(1, 3)]
     public float lacunarity = 2;
-    [Range(25, 250)]
+    [Range(25, 500)]
     public int heightScale = 25;
-    [Range(1, 10)]
+    [Range(1, 20)]
     public int mapSize = 1;
     public int seed;
     public Vector2 offset;

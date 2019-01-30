@@ -4,13 +4,12 @@ using System.Collections.Generic;
 
 public class MapImage
 {
-    public static Texture2D Generate(MapSetting setting, List<Height> chunkHegihts, int scale)
+    public static Texture2D Generate(MapSetting setting, List<Height> chunkHegihts, int scale=1)
     {
         int dim = setting.mapDimension;
         int textureSize = dim * setting.chunkSideLength * scale;
         float maxHeight = chunkHegihts.Max(x => x.maxValue);
 
-        Color[] layerColor = setting.layers.Select(x => x.color).ToArray();
         Texture2D texture = new Texture2D(textureSize, textureSize);
         texture.wrapMode = TextureWrapMode.Clamp;
         int chunkSize = setting.chunkSideLength * scale;

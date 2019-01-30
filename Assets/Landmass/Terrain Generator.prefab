@@ -1,0 +1,227 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2941229079262878704
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2941229079262878709}
+  - component: {fileID: 2941229079262878710}
+  - component: {fileID: 2941229079262878711}
+  m_Layer: 0
+  m_Name: Terrain Generator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2941229079262878709
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2941229079262878704}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2941229079262878710
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2941229079262878704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cfee6d7ff2c47f45bdb0f15e303a7e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  noisePeakMin: 0.11689894
+  noisePeakMax: 0.75002253
+  mapPeakMin: 0
+  mapPeakMax: 40
+  texture: {fileID: 0}
+  setting: {fileID: 2941229079262878711}
+  mapMaterial: {fileID: 2100000, guid: 74f21eae83ebbe14b87e781f3b5146cd, type: 2}
+  waterMaterial: {fileID: 2100000, guid: 0107a7e0aa4c9014db7ead4e92389156, type: 2}
+  terrain: {fileID: 0}
+  mapObject: {fileID: 0}
+--- !u!114 &2941229079262878711
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2941229079262878704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9400f869c790725468864517712c999f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mapDimension: 2
+  chunkSizeUnits10: 15
+  noiseScale: 100
+  octaves: 5
+  persistance: 0.22
+  lacunarity: 1.71
+  heightScale: 40
+  mapSize: 1
+  seed: 5
+  offset: {x: 0, y: 0}
+  mapObjects:
+  - objects:
+    - {fileID: 1804530098439938, guid: 93072244261389f47a317fd07120b2ef, type: 3}
+    - {fileID: 1497791806160286, guid: f19a5b2617541f64f840fb6901277409, type: 3}
+    - {fileID: 1772684306467402, guid: ce423a1b4ed987c41ae4862d5c731d0e, type: 3}
+    - {fileID: 1522346781748456, guid: 8e1940d4594043b45ad7d17fef481975, type: 3}
+    - {fileID: 1382400653357446, guid: 08f03b3853ce0c345b31fd1c193c61cd, type: 3}
+    - {fileID: 1965746825241214, guid: d329641bb941a9f4088a64e988080394, type: 3}
+    - {fileID: 1689221453859192, guid: a6bfdd87537b7cd4ea5d153fdd5ff931, type: 3}
+    - {fileID: 1382983160626700, guid: 43b3676f24aaf0a46af8c8e26f7d25ed, type: 3}
+    distribute:
+    - range: {x: 39, y: 42}
+      radius: 20
+    - range: {x: 44.2, y: 45}
+      radius: 20
+    - range: {x: 42, y: 44.2}
+      radius: 2
+  - objects:
+    - {fileID: 1578059476213952, guid: b96487cae690b8d43a212bba36bcec42, type: 3}
+    - {fileID: 1022616130255932, guid: 31b39d0317ce9304ea77d597eafe5ce0, type: 3}
+    - {fileID: 1643520682958114, guid: 5305969404cacdf438079621440a5d5d, type: 3}
+    - {fileID: 1186327226419056, guid: 5e4316b97a196b74c86ff17533183468, type: 3}
+    distribute:
+    - range: {x: 45, y: 53}
+      radius: 10
+  - objects:
+    - {fileID: 1701464604586434, guid: e17487c257079f442bd77d4e45ce7505, type: 3}
+    - {fileID: 1317114056462428, guid: 3cab553f9799be94eb1bf30424a09410, type: 3}
+    - {fileID: 1344510024272800, guid: 4e115df7842ea2d4a90672c2d8b0bb0e, type: 3}
+    - {fileID: 1936671644346290, guid: 1121d77d485e1dc41ad82ca170503f8c, type: 3}
+    - {fileID: 1527019007570352, guid: 13aae4fcd5eb5764f9cefcd34546fc87, type: 3}
+    - {fileID: 1226859772264418, guid: 7c493aa67d2a99c48b489ae8d0643f8d, type: 3}
+    - {fileID: 1043406334986240, guid: 89250f3460a4d794b9860b0293d57116, type: 3}
+    - {fileID: 1596025372809824, guid: f52c986a63a96e74cbd6d177fad66e26, type: 3}
+    distribute:
+    - range: {x: 39, y: 53}
+      radius: 10
+  - objects:
+    - {fileID: 1775092282105640, guid: d57bba9d7f3365c408a22d7399aeb67c, type: 3}
+    distribute:
+    - range: {x: 40, y: 42}
+      radius: 12
+  - objects:
+    - {fileID: 1327167594029096, guid: 2c66b8dbde22d794b8659b99c0011c33, type: 3}
+    distribute:
+    - range: {x: 40, y: 42}
+      radius: 6
+  heightCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 1.9858766
+      outSlope: 1.9858766
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.08350081
+      value: 0.1658223
+      inSlope: 2.2327454
+      outSlope: 2.2327454
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.6621916
+    - serializedVersion: 3
+      time: 0.2165061
+      value: 0.34565532
+      inSlope: 0.4666619
+      outSlope: 0.4666619
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.786295
+      outWeight: 1
+    - serializedVersion: 3
+      time: 0.3226176
+      value: 0.3782585
+      inSlope: 0.28746983
+      outSlope: 0.28746983
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 1
+      outWeight: 0.39209995
+    - serializedVersion: 3
+      time: 0.6697951
+      value: 0.4499963
+      inSlope: 0.18281537
+      outSlope: 0.18281537
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 1
+    - serializedVersion: 3
+      time: 0.809901
+      value: 0.52608836
+      inSlope: 1.0058753
+      outSlope: 1.0058753
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.7048611
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2.4929729
+      outSlope: 2.4929729
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  layers:
+  - color: {r: 0, g: 0.49355268, b: 1, a: 0}
+    height: 0
+    blendStrength: 0
+    mapObject: []
+  - color: {r: 0.05322181, g: 0.8679245, b: 0.8272298, a: 0}
+    height: 0.1658223
+    blendStrength: 1
+    mapObject: []
+  - color: {r: 0.8679245, g: 0.8007938, b: 0.36436453, a: 0}
+    height: 0.34565532
+    blendStrength: 0.086
+    mapObject: []
+  - color: {r: 0.37647063, g: 0.8117648, b: 0.011764707, a: 0}
+    height: 0.3782585
+    blendStrength: 0.012
+    mapObject:
+    - {fileID: 1804530098439938, guid: 93072244261389f47a317fd07120b2ef, type: 3}
+    - {fileID: 1497791806160286, guid: f19a5b2617541f64f840fb6901277409, type: 3}
+    - {fileID: 1772684306467402, guid: ce423a1b4ed987c41ae4862d5c731d0e, type: 3}
+    - {fileID: 1522346781748456, guid: 8e1940d4594043b45ad7d17fef481975, type: 3}
+    - {fileID: 1382400653357446, guid: 08f03b3853ce0c345b31fd1c193c61cd, type: 3}
+    - {fileID: 1965746825241214, guid: d329641bb941a9f4088a64e988080394, type: 3}
+    - {fileID: 1689221453859192, guid: a6bfdd87537b7cd4ea5d153fdd5ff931, type: 3}
+    - {fileID: 1382983160626700, guid: 43b3676f24aaf0a46af8c8e26f7d25ed, type: 3}
+  - color: {r: 0.6981132, g: 0.5096834, b: 0.18770024, a: 0}
+    height: 0.4499963
+    blendStrength: 0.013
+    mapObject: []
+  - color: {r: 0.3301887, g: 0.14903867, b: 0.02024743, a: 0}
+    height: 0.52608836
+    blendStrength: 0.691
+    mapObject: []
