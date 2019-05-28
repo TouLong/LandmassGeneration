@@ -16,14 +16,15 @@ public class TerrainGenerator : MonoBehaviour
     public Material waterMaterial;
     [HideInInspector] public GameObject terrain;
     [HideInInspector] public GameObject mapObject;
+    Vector3 mapOffset;
 
     public void GenerateChunks()
     {
         ClearChunk();
-
+        mapOffset = new Vector3(setting.mapSideLength*setting.mapSize, 0, setting.mapSideLength* setting.mapSize);
         terrain = new GameObject("Terrain");
         terrain.transform.parent = transform;
-        terrain.transform.localPosition = Vector3.zero;
+        terrain.transform.localPosition = mapOffset;
         List<Vector2> chunkNoiseMinMax = new List<Vector2>();
         List<Vector2> chunkMapMinMax = new List<Vector2>();
         int meshSize = setting.chunkSideLength;
@@ -54,7 +55,7 @@ public class TerrainGenerator : MonoBehaviour
         water.transform.parent = transform;
         water.transform.localScale = new Vector3(setting.mapSideLength * setting.mapSize / 10f, 1, setting.mapSideLength * setting.mapSize / 10f);
         float waterHeight = setting.layers[2].height * mapPeakMax;
-        water.transform.localPosition = new Vector3(setting.mapSideLength*setting.mapSize / 2f, waterHeight, setting.mapSideLength * setting.mapSize / 2f);
+        water.transform.localPosition = new Vector3(setting.mapSideLength * setting.mapSize / 2f, waterHeight, setting.mapSideLength * setting.mapSize / 2f)+mapOffset;
         Renderer waterRender = water.transform.GetComponent<Renderer>();
         waterRender.sharedMaterial = waterMaterial;
         Collider waterCollider = water.transform.GetComponent<Collider>();
@@ -62,8 +63,13 @@ public class TerrainGenerator : MonoBehaviour
 
         UpdateMaterial();
 
-
         PDS();
+    }
+
+    public void RandomGenerateChunks()
+    {
+        setting.seed = Random.Range(-1000,1000);
+        GenerateChunks();
     }
 
     public void ClearChunk()
@@ -90,12 +96,15 @@ public class TerrainGenerator : MonoBehaviour
     {
         mapObject = new GameObject("Map Object");
         mapObject.transform.parent = transform;
-        terrain.transform.localPosition = Vector3.zero;
+        mapObject.transform.localPosition = terrain.transform.localPosition;
+        float regionX = setting.mapSideLength * setting.mapSize + mapObject.transform.localPosition.x;
+        float regionY = setting.mapSideLength * setting.mapSize + mapObject.transform.localPosition.z;
+        Vector2 sampleRegionSize = new Vector2(regionX, regionY);
         foreach (MapSetting.MapObject mapObj in setting.mapObjects)
         {
             foreach (MapSetting.MapObjectDistribute dist in mapObj.distribute)
             {
-                List<Vector2> points = PoissonDiscSampling.GeneratePoints(dist.radius * setting.mapSize, new Vector2(setting.mapSideLength * setting.mapSize, setting.mapSideLength * setting.mapSize));
+                List<Vector2> points = PoissonDiscSampling.GeneratePoints(dist.radius * setting.mapSize, sampleRegionSize);
                 RaycastHit raycastHit;
                 float heightTemp;
                 for (int i = 0; i < points.Count; i++)
@@ -163,12 +172,16 @@ public class TerrainGeneratorEditor : Editor
         base.OnInspectorGUI();
         terrain = target as TerrainGenerator;
 
-        EditorGUILayout.LabelField(string.Format("地圖尺寸 : {0}x{0}  地圖高度 : {1}~{2}  Noise範圍 : {3:0.00}~{4:0.00}",
-          terrain.setting.mapSideLength, terrain.mapPeakMin, terrain.mapPeakMax, terrain.noisePeakMin, terrain.noisePeakMax));
+        //EditorGUILayout.LabelField(string.Format("地圖尺寸 : {0}x{0}  地圖高度 : {1}~{2}  Noise範圍 : {3:0.00}~{4:0.00}",
+        //  terrain.setting.mapSideLength, terrain.mapPeakMin, terrain.mapPeakMax, terrain.noisePeakMin, terrain.noisePeakMax));
+        EditorGUILayout.LabelField(string.Format("地圖尺寸 : {0}x{0}  地圖高度 : {1}~{2} ",
+          terrain.setting.mapSideLength, terrain.mapPeakMin, terrain.mapPeakMax));
 
         //EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Generate"))
             terrain.GenerateChunks();
+        if (GUILayout.Button("Random Generate"))
+            terrain.RandomGenerateChunks();
         if (GUILayout.Button("Clear"))
             terrain.ClearChunk();
         if (GUILayout.Button("Update Material"))
