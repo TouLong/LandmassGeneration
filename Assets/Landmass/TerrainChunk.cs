@@ -8,8 +8,8 @@ public class TerrainChunk
     MeshFilter meshFilter;
     MeshCollider meshCollider;
     MapSetting setting;
-    public Height noiseHeight;
-    public Height mapHeight;
+    public HeightData noiseHeight;
+    public HeightData mapHeight;
     public Vector2 noiseMinMax;
     public Vector2 mapMinMax;
 

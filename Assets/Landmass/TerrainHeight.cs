@@ -2,9 +2,9 @@
 
 public static class NoiseHeight
 {
-    public static Height Generate(MapSetting setting, Vector2 sampleCentre)
+    public static HeightData Generate(MapSetting setting, Vector2 sampleCentre)
     {
-        int size = setting.chunkVertexs;
+        int size = setting.ChunkVertices;
         float[,] noise = new float[size, size];
 
         System.Random prng = new System.Random(setting.seed);
@@ -46,20 +46,20 @@ public static class NoiseHeight
                     frequency *= setting.lacunarity;
                 }
 
-                noise[x, y] = noiseHeight/ maxPossibleHeight;
+                noise[x, y] = noiseHeight / maxPossibleHeight;
                 noiseMin = Mathf.Min(noise[x, y], noiseMin);
                 noiseMax = Mathf.Max(noise[x, y], noiseMax);
             }
         }
-        return new Height(noise, noiseMin, noiseMax);
+        return new HeightData(noise, noiseMin, noiseMax);
     }
 }
 
 public static class MapHeight
 {
-    public static Height Generate(MapSetting setting, Vector2 range, float[,] noise)
+    public static HeightData Generate(MapSetting setting, Vector2 range, float[,] noise)
     {
-        int size = setting.chunkVertexs;
+        int size = setting.ChunkVertices;
         float[,] map = new float[size, size];
 
         float mapMin = float.MaxValue;
@@ -70,21 +70,22 @@ public static class MapHeight
         {
             for (int x = 0; x < size; x++)
             {
-                map[x, y] = heightCurve.Evaluate(Mathf.InverseLerp(range.x, range.y, noise[x, y])) * setting.heightScale;
+                map[x, y] = heightCurve.Evaluate(Mathf.InverseLerp(range.x, range.y, noise[x, y])) * setting.mapHeight * setting.mapScale;
                 mapMin = Mathf.Min(map[x, y], mapMin);
                 mapMax = Mathf.Max(map[x, y], mapMax);
             }
         }
-        return new Height(map, mapMin, mapMax);
+        return new HeightData(map, mapMin, mapMax);
     }
 }
 
-public class Height
+public class HeightData
 {
     public float maxValue;
     public float minValue;
     public float[,] values;
-    public Height(float[,] values, float minValue, float maxValue)
+
+    public HeightData(float[,] values, float minValue, float maxValue)
     {
         this.values = values;
         this.maxValue = maxValue;

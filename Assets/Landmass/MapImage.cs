@@ -4,15 +4,15 @@ using System.Collections.Generic;
 
 public class MapImage
 {
-    public static Texture2D Generate(MapSetting setting, List<Height> chunkHegihts, int scale=1)
+    public static Texture2D Generate(MapSetting setting, List<HeightData> chunkHegihts, int scale = 1)
     {
         int dim = setting.mapDimension;
-        int textureSize = dim * setting.chunkSideLength * scale;
+        int textureSize = dim * setting.chunkMesh * scale;
         float maxHeight = chunkHegihts.Max(x => x.maxValue);
 
         Texture2D texture = new Texture2D(textureSize, textureSize);
         texture.wrapMode = TextureWrapMode.Clamp;
-        int chunkSize = setting.chunkSideLength * scale;
+        int chunkSize = setting.chunkMesh * scale;
         Color[] colorMap = new Color[chunkSize * chunkSize];
 
         for (int h = 0; h < dim; h++)
