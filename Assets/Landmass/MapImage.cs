@@ -10,8 +10,10 @@ public class MapImage
         int textureSize = dim * setting.chunkMesh * scale;
         float maxHeight = chunkHegihts.Max(x => x.maxValue);
 
-        Texture2D texture = new Texture2D(textureSize, textureSize);
-        texture.wrapMode = TextureWrapMode.Clamp;
+        Texture2D texture = new Texture2D(textureSize, textureSize)
+        {
+            wrapMode = TextureWrapMode.Clamp
+        };
         int chunkSize = setting.chunkMesh * scale;
         Color[] colorMap = new Color[chunkSize * chunkSize];
 

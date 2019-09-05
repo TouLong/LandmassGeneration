@@ -1,7 +1,5 @@
 ﻿Shader "Custom/Terrain" {
 	Properties {
-		testTexture("Texture", 2D) = "white"{}
-		testScale("Scale", Float) = 1
 
 	}
 	SubShader {
@@ -36,11 +34,6 @@
 
 		void surf(Input IN, inout SurfaceOutputStandard o) {
 			float heightPercent = inverseLerp(minHeight, maxHeight, IN.worldPos.y);
-			//for (int i = 0; i < layerCount; i++) 
-			//{
-			//	float drawStrength = saturate(sign(heightPercent - baseStartHeights[i]));
-			//	o.Albedo = o.Albedo * (1 - drawStrength) + baseColors[i] * drawStrength;
-			//}
 			for (int i = 0; i < layerCount; i++) 
 			{
 				float drawStrength = inverseLerp(-baseBlends[i] / 10 - epsilon, baseBlends[i] / 10, heightPercent - baseStartHeights[i]);

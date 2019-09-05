@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2941229079262878709}
   - component: {fileID: 2941229079262878710}
-  - component: {fileID: 2941229079262878711}
   m_Layer: 0
   m_Name: Terrain Generator
   m_TagString: Untagged
@@ -49,120 +48,8 @@ MonoBehaviour:
   mapPeakMin: 0
   mapPeakMax: 25
   texture: {fileID: 0}
-  setting: {fileID: 2941229079262878711}
-  mapMaterial: {fileID: 2100000, guid: 74f21eae83ebbe14b87e781f3b5146cd, type: 2}
-  water: 2
-  waterMaterial: {fileID: 2100000, guid: 0107a7e0aa4c9014db7ead4e92389156, type: 2}
+  setting: {fileID: 0}
   terrain: {fileID: 0}
   mapObject: {fileID: 0}
---- !u!114 &2941229079262878711
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2941229079262878704}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9400f869c790725468864517712c999f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mapDimension: 1
-  chunkMesh: 250
-  mapHeight: 25
-  mapScale: 1
-  noiseScale: 100
-  octaves: 5
-  persistance: 0.22
-  lacunarity: 1.71
-  seed: 5
-  offset: {x: 0, y: 0}
-  mapObjects: []
-  heightCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 1.9858766
-      outSlope: 1.9858766
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 0.08350081
-      value: 0.1658223
-      inSlope: 2.2327454
-      outSlope: 2.2327454
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.6621916
-    - serializedVersion: 3
-      time: 0.2165061
-      value: 0.34565532
-      inSlope: 0.4666619
-      outSlope: 0.4666619
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.786295
-      outWeight: 1
-    - serializedVersion: 3
-      time: 0.3226176
-      value: 0.3782585
-      inSlope: 0.28746983
-      outSlope: 0.28746983
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 1
-      outWeight: 0.39209995
-    - serializedVersion: 3
-      time: 0.6697951
-      value: 0.4499963
-      inSlope: 0.18281537
-      outSlope: 0.18281537
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 1
-    - serializedVersion: 3
-      time: 0.809901
-      value: 0.52608836
-      inSlope: 1.0058753
-      outSlope: 1.0058753
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.7048611
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 2.4929729
-      outSlope: 2.4929729
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  layers:
-  - color: {r: 0, g: 0.49355268, b: 1, a: 0}
-    height: 0
-    blendStrength: 0
-  - color: {r: 0.05322181, g: 0.8679245, b: 0.8272298, a: 0}
-    height: 0.1658223
-    blendStrength: 1
-  - color: {r: 0.8679245, g: 0.8007938, b: 0.36436453, a: 0}
-    height: 0.34565532
-    blendStrength: 0.086
-  - color: {r: 0.37647063, g: 0.8117648, b: 0.011764707, a: 0}
-    height: 0.3782585
-    blendStrength: 0.012
-  - color: {r: 0.6981132, g: 0.5096834, b: 0.18770024, a: 0}
-    height: 0.4499963
-    blendStrength: 0.013
-  - color: {r: 0.3301887, g: 0.14903867, b: 0.02024743, a: 0}
-    height: 0.52608836
-    blendStrength: 0.691
+  autoUpdateMaterial: 0
+  generateMapObject: 0
