@@ -9,6 +9,7 @@ public class TerrainEditor : EditorWindow
     static TerrainGenerator terrain;
     static MapSetting setting;
     Vector2 scrollPos;
+    Texture2D mapImage;
     [MenuItem("Window/Terrain Editor")]
     public static void ShowWindow()
     {
@@ -45,14 +46,13 @@ public class TerrainEditor : EditorWindow
         scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
         GUILayoutOption[] btnOption = new GUILayoutOption[] { GUILayout.MaxWidth(200), GUILayout.Height(20) };
 
-
         #region Info And Image
         GUILayout.Label(string.Format("地圖尺寸: {0}x{0}x{1}, 地圖網格: {2}x{2}, Noise範圍: {3:0.00}~{4:0.00} ",
         setting.MapSideLength, terrain.mapPeakMax, setting.MapSideMesh, terrain.noisePeakMin, terrain.noisePeakMax));
-        GUILayout.Label(terrain.texture);
-        if (GUILayout.Button("生成", btnOption)) terrain.Generate();
-        if (GUILayout.Button("隨機生成", btnOption)) terrain.RandomGenerate();
-        if (GUILayout.Button("清除", btnOption)) terrain.Clear();
+        GUILayout.Label(mapImage);
+        if (GUILayout.Button("生成", btnOption)) Generate();
+        if (GUILayout.Button("隨機生成", btnOption)) Random();
+        if (GUILayout.Button("清除", btnOption)) Clear();
         #endregion
         GUILine();
 
@@ -90,9 +90,9 @@ public class TerrainEditor : EditorWindow
                 for (int j = 0; j < distributions.Count; j++)
                 {
                     EditorGUIUtility.labelWidth = 230;
-                    distributions[j].radius = EditorGUILayout.FloatField(string.Format("分佈範圍(高度): {0:0} ~ {1:0} | 分散度: ", distributions[j].region.x, distributions[j].region.y), distributions[j].radius);
+                    distributions[j].radius = EditorGUILayout.FloatField(string.Format("分佈範圍(高度): {0:0.00} ~ {1:0.00} | 分散度: ", distributions[j].region.x, distributions[j].region.y), distributions[j].radius);
                     EditorGUIUtility.labelWidth = 0;
-                    EditorGUILayout.MinMaxSlider(ref distributions[j].region.x, ref distributions[j].region.y, 0, 100);
+                    EditorGUILayout.MinMaxSlider(ref distributions[j].region.x, ref distributions[j].region.y, terrain.mapPeakMin, terrain.mapPeakMax);
                 }
             }
             EditorGUI.indentLevel = 0;
@@ -130,26 +130,34 @@ public class TerrainEditor : EditorWindow
             terrain.UpdateMaterial();
             terrain.ComputeRatio();
         }
-
+        int[] layerIndeices = new int[setting.layers.Count + 1];
+        string[] layerLabel = new string[setting.layers.Count + 1];
+        layerIndeices[0] = -1;
+        layerLabel[0] = "null";
         for (int i = 0; i < setting.layers.Count; i++)
         {
             MapSetting.Layer layer = setting.layers[i];
             layer.height = heightCurve.keys[i].value;
-            //float rangeMin = layer.height * terrain.mapPeakMax;
-            //float rangeMax = i == layerHeights.Length - 1 ? terrain.mapPeakMax : setting.layers[i + 1].height * terrain.mapPeakMax;
-            float rangeMin = layer.height;
-            float rangeMax = i == terrain.distributionRatio.Length - 1 ? 1 : setting.layers[i + 1].height;
-            GUILayout.Label(string.Format("區域{0}-高度:{1:0.00}~{2:0.00}, 佔比:{3:0}%",
-                i + 1, rangeMin, rangeMax, terrain.distributionRatio[i] * 100), GUILayout.MaxWidth(210f));
+            float rangeMin = layer.height * terrain.mapPeakMax;
+            float rangeMax = i == terrain.distributionRatio.Length - 1 ? terrain.mapPeakMax : setting.layers[i + 1].height * terrain.mapPeakMax;
+            //float rangeMin = layer.height;
+            //float rangeMax = i == terrain.distributionRatio.Length - 1 ? 1 : setting.layers[i + 1].height;
+            string label = string.Format("區域{0}-高度:{1:0.00}~{2:0.00}, 佔比:{3:0}%", i + 1, rangeMin, rangeMax, terrain.distributionRatio[i] * 100);
+            GUILayout.Label(label, GUILayout.MaxWidth(210f));
             EditorGUILayout.BeginHorizontal();
             layer.blendStrength = EditorGUILayout.Slider(layer.blendStrength, 0, i == 0 ? 0 : 1, GUILayout.MinWidth(80f));
             layer.color = EditorGUILayout.ColorField(layer.color, GUILayout.MinWidth(20f));
             EditorGUILayout.EndHorizontal();
+            layerIndeices[i + 1] = i;
+            layerLabel[i + 1] = label;
         }
-        EditorGUILayout.LabelField("水面:");
-        setting.waterLayer = EditorGUILayout.IntSlider(setting.waterLayer, -1, setting.layers.Count - 1);
+        EditorGUILayout.BeginHorizontal();
+        setting.waterLayer = EditorGUILayout.IntPopup("湖面", setting.waterLayer, layerLabel, layerIndeices);
+        setting.mountainLayer = EditorGUILayout.IntPopup("山區", setting.mountainLayer, layerLabel, layerIndeices);
+        EditorGUILayout.EndHorizontal();
         EditorGUILayout.CurveField(heightCurve, GUILayout.MinHeight(100f));
-        if (GUILayout.Button("生成", btnOption)) terrain.Generate();
+        if (GUILayout.Button("生成", btnOption)) Generate();
+        if (GUILayout.Button("隨機顏色", btnOption)) RandomLayerColor();
         if (GUILayout.Button("更新材質", btnOption)) terrain.UpdateMaterial();
         #endregion
         GUILine();
@@ -165,14 +173,38 @@ public class TerrainEditor : EditorWindow
         setting.lacunarity = EditorGUILayout.Slider("Lacunarity", setting.lacunarity, 1, 5);
         setting.seed = EditorGUILayout.IntField("Seed", setting.seed);
         setting.offset = EditorGUILayout.Vector2Field("Offset", setting.offset);
-        if (GUILayout.Button("生成", btnOption)) terrain.Generate();
-        if (GUILayout.Button("隨機生成", btnOption)) terrain.RandomGenerate();
+        if (GUILayout.Button("生成", btnOption)) Generate();
+        if (GUILayout.Button("隨機生成", btnOption)) Random();
         #endregion
         GUILine();
 
         EditorGUILayout.EndScrollView();
     }
-
+    void Generate()
+    {
+        terrain.Generate();
+        mapImage = MapImage.Generate(setting, terrain.chunkList.Select(a => a.mapHeight).ToList());
+    }
+    void Random()
+    {
+        terrain.RandomGenerate();
+        mapImage = MapImage.Generate(setting, terrain.chunkList.Select(a => a.mapHeight).ToList());
+    }
+    void Clear()
+    {
+        terrain.Clear();
+        mapImage = new Texture2D(0, 0);
+    }
+    void RandomLayerColor()
+    {
+        for (int i = 0; i < setting.layers.Count; i++)
+        {
+            setting.layers[i].color.r = UnityEngine.Random.value;
+            setting.layers[i].color.b = UnityEngine.Random.value;
+            setting.layers[i].color.g = UnityEngine.Random.value;
+        }
+        terrain.UpdateMaterial();
+    }
     void ListField(string label, int count, Action add, Action remove)
     {
         GUILayout.BeginHorizontal();
@@ -183,7 +215,6 @@ public class TerrainEditor : EditorWindow
             remove();
         GUILayout.EndHorizontal();
     }
-
     static void GUILine()
     {
         EditorGUILayout.Space();

@@ -1,10 +1,12 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine.AI;
 public class TerrainChunk
 {
     readonly GameObject meshObject;
     readonly MapSetting setting;
     readonly Vector2 location;
+    public NavMeshBuildSource navMesh;
     public HeightData noiseHeight;
     public HeightData mapHeight;
 
@@ -17,6 +19,7 @@ public class TerrainChunk
         meshObject.transform.parent = parent;
         meshObject.transform.localPosition = new Vector3(center.x, 0, center.y);
         location = center;
+        GameObjectUtility.SetStaticEditorFlags(meshObject, StaticEditorFlags.NavigationStatic);
     }
     public HeightData ComputeNoise()
     {
@@ -31,6 +34,12 @@ public class TerrainChunk
         meshFilter.mesh = mesh;
         MeshCollider meshCollider = meshObject.AddComponent<MeshCollider>();
         meshCollider.sharedMesh = mesh;
+        navMesh = new NavMeshBuildSource()
+        {
+            shape = NavMeshBuildSourceShape.Mesh,
+            sourceObject = meshFilter.sharedMesh,
+            transform = meshFilter.transform.localToWorldMatrix,
+        };
         return mapHeight;
     }
 }

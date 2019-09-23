@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9400f869c790725468864517712c999f, type: 3}
   m_Name: MapSetting1
   m_EditorClassIdentifier: 
-  mapDimension: 1
+  mapDimension: 2
   chunkMesh: 100
   mapHeight: 5
   mapScale: 1
@@ -83,5 +83,5 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   waterLayer: -1
-  mapMaterial: {fileID: 2100000, guid: 74f21eae83ebbe14b87e781f3b5146cd, type: 2}
+  mapMaterial: {fileID: 0}
   waterMaterial: {fileID: 2100000, guid: 0107a7e0aa4c9014db7ead4e92389156, type: 2}

@@ -24,6 +24,7 @@ public class MapSetting : ScriptableObject
     public Vector2 offset;
     public AnimationCurve heightCurve = AnimationCurve.Linear(0, 0, 1, 1);
     public int waterLayer = -1;
+    public int mountainLayer = -1;
     public Material mapMaterial;
     public Material waterMaterial;
     public List<Layer> layers = new List<Layer>();

@@ -1,22 +1,23 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.AI;
 [ExecuteInEditMode]
 public class TerrainGenerator : MonoBehaviour
 {
-    [HideInInspector] public List<TerrainChunk> terrainChunkList = new List<TerrainChunk>();
+    public MapSetting setting;
+    public bool autoUpdateMaterial;
+    public bool generateMapObject;
+    [HideInInspector] public List<TerrainChunk> chunkList = new List<TerrainChunk>();
     [HideInInspector] public float noisePeakMin = float.MinValue;
     [HideInInspector] public float noisePeakMax = float.MaxValue;
     [HideInInspector] public float mapPeakMin = float.MinValue;
     [HideInInspector] public float mapPeakMax = float.MaxValue;
     [HideInInspector] public float[] distributionRatio;
-    [HideInInspector] public Texture2D texture;
-    public MapSetting setting;
-
     [HideInInspector] public GameObject terrain;
     [HideInInspector] public GameObject mapObject;
-    public bool autoUpdateMaterial;
-    public bool generateMapObject;
+    Bounds bounds;
+
     void Update()
     {
         if (autoUpdateMaterial && setting != null)
@@ -26,12 +27,12 @@ public class TerrainGenerator : MonoBehaviour
     {
         Clear();
         GenerateChunks();
-        texture = MapImage.Generate(setting, terrainChunkList.Select(x => x.mapHeight).ToList());
         if (setting.waterLayer >= 0)
             GenerateWater();
         UpdateMaterial();
         if (generateMapObject)
             GenerateMapObject();
+        GenerateNavMesh();
     }
     public void RandomGenerate()
     {
@@ -48,14 +49,13 @@ public class TerrainGenerator : MonoBehaviour
             for (int x = 0; x < setting.mapDimension; x++)
             {
                 TerrainChunk newChunk = new TerrainChunk(new Vector2(x * meshSize, y * meshSize), setting, terrain.transform);
-                terrainChunkList.Add(newChunk);
+                chunkList.Add(newChunk);
                 newChunk.ComputeNoise();
                 noisePeakMin = Mathf.Min(noisePeakMin, newChunk.noiseHeight.minValue);
                 noisePeakMax = Mathf.Max(noisePeakMax, newChunk.noiseHeight.maxValue);
             }
         }
-        distributionRatio = new float[setting.layers.Count];
-        foreach (TerrainChunk chunk in terrainChunkList)
+        foreach (TerrainChunk chunk in chunkList)
         {
             chunk.Create(new Vector2(noisePeakMin, noisePeakMax));
             mapPeakMin = Mathf.Min(mapPeakMin, chunk.mapHeight.minValue);
@@ -91,7 +91,8 @@ public class TerrainGenerator : MonoBehaviour
     }
     public void Clear()
     {
-        terrainChunkList.Clear();
+        chunkList.Clear();
+        NavMesh.RemoveAllNavMeshData();
         while (transform.childCount != 0)
         {
             DestroyImmediate(transform.GetChild(0).gameObject);
@@ -111,7 +112,8 @@ public class TerrainGenerator : MonoBehaviour
     }
     public void ComputeRatio()
     {
-        foreach (TerrainChunk chunk in terrainChunkList)
+        distributionRatio = new float[setting.layers.Count];
+        foreach (TerrainChunk chunk in chunkList)
         {
             IEnumerable<float> heights = chunk.noiseHeight.values.Cast<float>();
             List<float> layerHeights = setting.layers.Select(a => a.height).ToList();
@@ -127,6 +129,44 @@ public class TerrainGenerator : MonoBehaviour
         {
             distributionRatio[i] /= setting.MapSideMesh * setting.MapSideMesh;
         }
+    }
+    public void GenerateNavMesh()
+    {
+        bounds = new Bounds()
+        {
+            min = Vector3.zero,
+        };
+        if (setting.mountainLayer > -1)
+            bounds.max = new Vector3(setting.MapSideLength, setting.layers[setting.mountainLayer].height * mapPeakMax, setting.MapSideLength);
+        else
+            bounds.max = new Vector3(setting.MapSideLength, mapPeakMax, setting.MapSideLength);
+        List<NavMeshBuildSource> meshBuildSources = chunkList.Select(a => a.navMesh).ToList();
+        List<MeshFilter> mfs = mapObject.GetComponentsInChildren<MeshFilter>().ToList();
+        foreach (MeshFilter mf in mfs)
+        {
+            meshBuildSources.Add(new NavMeshBuildSource()
+            {
+                shape = NavMeshBuildSourceShape.Mesh,
+                sourceObject = mf.sharedMesh,
+                transform = mf.transform.localToWorldMatrix,
+            });
+        }
+        NavMeshBuildSettings settings = NavMesh.GetSettingsByIndex(0);
+        NavMesh.AddNavMeshData(NavMeshBuilder.BuildNavMeshData(settings, meshBuildSources, bounds, bounds.min, Quaternion.identity));
+    }
+    void OnDrawGizmosSelected()
+    {
+        Bounds gizmosBounds = new Bounds()
+        {
+            min = Vector3.zero,
+        };
+        if (setting.layers.Count > 0 && setting.mountainLayer > -1)
+            gizmosBounds.max = new Vector3(setting.MapSideLength, setting.layers[setting.mountainLayer].height * mapPeakMax, setting.MapSideLength);
+        else
+            gizmosBounds.max = new Vector3(setting.MapSideLength, mapPeakMax, setting.MapSideLength);
+
+        Gizmos.color = Color.black;
+        Gizmos.DrawWireCube(gizmosBounds.center, gizmosBounds.size);
     }
     //void OnValidate()
     //{

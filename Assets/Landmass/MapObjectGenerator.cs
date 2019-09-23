@@ -1,7 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
+using UnityEngine.AI;
 using System.Linq;
+
 public class MapObjectGenerator
 {
     class Spawn
@@ -90,10 +92,12 @@ public class MapObjectGenerator
                     if (IsValid(candidate, regionSize, cellSize, radius, allPoints, indexMap))
                     {
                         Physics.Raycast(new Vector3(candidate.x, regionPeak + 1, candidate.y), Vector3.down, out RaycastHit hit);
-                        if (hit.point.y >= spawn.regionMin * regionPeak / 100 && hit.point.y <= spawn.regionMax * regionPeak / 100)
+                        if (hit.point.y >= spawn.regionMin && hit.point.y <= spawn.regionMax)
                         {
                             GameObject newGO = Object.Instantiate(spawn.mapObjects[Random.Range(0, spawn.mapObjects.Count)], transDic[spawn.name]);
                             newGO.transform.position = new Vector3(candidate.x, hit.point.y, candidate.y);
+                            GameObjectUtility.SetStaticEditorFlags(newGO, StaticEditorFlags.NavigationStatic);
+                            //newGO.AddComponent<NavMeshObstacle>().carving = true;
                             allPoints.Add(candidate);
                             spawnPoints.Add(candidate);
                             indexMap[(int)(candidate.x / cellSize), (int)(candidate.y / cellSize)] = allPoints.Count;
