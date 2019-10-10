@@ -2,7 +2,7 @@
 
 public static class NoiseHeight
 {
-    public static HeightData Generate(MapSetting setting, Vector2 sampleCentre)
+    public static HeightData Generate(MapSetting setting, Vector2 sampleCenter)
     {
         int size = setting.ChunkVertices;
         float[,] noise = new float[size, size];
@@ -16,8 +16,8 @@ public static class NoiseHeight
 
         for (int i = 0; i < setting.octaves; i++)
         {
-            float offsetX = prng.Next(-100000, 100000) + setting.offset.x + sampleCentre.x;
-            float offsetY = prng.Next(-100000, 100000) + setting.offset.y + sampleCentre.y;
+            float offsetX = prng.Next(-100000, 100000) + setting.offset.x + sampleCenter.x;
+            float offsetY = prng.Next(-100000, 100000) + setting.offset.y + sampleCenter.y;
             octaveOffsets[i] = new Vector2(offsetX, offsetY);
 
             maxPossibleHeight += amplitude;
@@ -64,13 +64,13 @@ public static class MapHeight
 
         float mapMin = float.MaxValue;
         float mapMax = float.MinValue;
-        AnimationCurve heightCurve = new AnimationCurve(setting.heightCurve.keys);
+        //AnimationCurve heightCurve = new AnimationCurve(setting.heightCurve.keys);
 
         for (int y = 0; y < size; y++)
         {
             for (int x = 0; x < size; x++)
             {
-                map[x, y] = heightCurve.Evaluate(Mathf.InverseLerp(range.x, range.y, noise[x, y])) * setting.mapHeight * setting.mapScale;
+                map[x, y] = setting.heightCurve.Evaluate(Mathf.InverseLerp(range.x, range.y, noise[x, y])) * setting.mapHeight * setting.mapScale;
                 mapMin = Mathf.Min(map[x, y], mapMin);
                 mapMax = Mathf.Max(map[x, y], mapMax);
             }

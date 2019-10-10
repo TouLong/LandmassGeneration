@@ -9,15 +9,15 @@ public class MapObjectGenerator
     class Spawn
     {
         public float radius;
-        public int regionMin;
-        public int regionMax;
+        public float regionMin;
+        public float regionMax;
         public List<GameObject> mapObjects;
         public string name;
         public Spawn(float radius, Vector2 heightMask, List<GameObject> mapObjects, string name)
         {
             this.radius = radius;
-            regionMin = (int)heightMask.x;
-            regionMax = (int)heightMask.y;
+            regionMin = heightMask.x;
+            regionMax = heightMask.y;
             this.mapObjects = mapObjects;
             this.name = name;
         }
@@ -97,7 +97,6 @@ public class MapObjectGenerator
                             GameObject newGO = Object.Instantiate(spawn.mapObjects[Random.Range(0, spawn.mapObjects.Count)], transDic[spawn.name]);
                             newGO.transform.position = new Vector3(candidate.x, hit.point.y, candidate.y);
                             GameObjectUtility.SetStaticEditorFlags(newGO, StaticEditorFlags.NavigationStatic);
-                            //newGO.AddComponent<NavMeshObstacle>().carving = true;
                             allPoints.Add(candidate);
                             spawnPoints.Add(candidate);
                             indexMap[(int)(candidate.x / cellSize), (int)(candidate.y / cellSize)] = allPoints.Count;

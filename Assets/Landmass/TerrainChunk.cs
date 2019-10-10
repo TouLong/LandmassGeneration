@@ -10,12 +10,12 @@ public class TerrainChunk
     public HeightData noiseHeight;
     public HeightData mapHeight;
 
-    public TerrainChunk(Vector2 center, MapSetting setting, Transform parent)
+    public TerrainChunk(Vector2 center, MapSetting setting, Transform parent, Material material)
     {
         this.setting = setting;
         meshObject = new GameObject("Terrain Chunk");
         MeshRenderer meshRenderer = meshObject.AddComponent<MeshRenderer>();
-        meshRenderer.material = setting.mapMaterial;
+        meshRenderer.material = material;
         meshObject.transform.parent = parent;
         meshObject.transform.localPosition = new Vector3(center.x, 0, center.y);
         location = center;
