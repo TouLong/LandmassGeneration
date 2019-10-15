@@ -15,12 +15,12 @@ MonoBehaviour:
   mapDimension: 1
   chunkMesh: 150
   mapHeight: 10
-  mapScale: 1
+  mapScale: 10
   noiseScale: 25
   octaves: 3
   lacunarity: 2
   persistance: 0.5
-  seed: -876
+  seed: -458
   offset: {x: 0, y: 0}
   heightCurve:
     serializedVersion: 2
@@ -91,9 +91,9 @@ MonoBehaviour:
   objectsDistribution:
   - groupName: Tree
     objects:
-    - {fileID: 8997760327582621752, guid: 93072244261389f47a317fd07120b2ef, type: 3}
+    - {fileID: 8227614148363476358, guid: 63ce3b8078d062841bbbda8917caebd8, type: 3}
     distributions:
-    - region: {x: 0, y: 0.51370347}
-      radius: 8
-    - region: {x: 0.51341915, y: 1.1319537}
-      radius: 3
+    - region: {x: 0, y: 5.3231635}
+      radius: 15
+    - region: {x: 7.4099245, y: 11.423309}
+      radius: 20

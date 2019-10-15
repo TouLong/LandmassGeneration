@@ -101,10 +101,12 @@ public class MapSetting : ScriptableObject
         }
         public ObjectDistribution Clone()
         {
-            ObjectDistribution objectDistribution = new ObjectDistribution();
-            objectDistribution.groupName = groupName;
-            objectDistribution.objects = objects;
-            objectDistribution.distributions = distributions.Select(a => a.Clone()).ToList();
+            ObjectDistribution objectDistribution = new ObjectDistribution
+            {
+                groupName = groupName,
+                objects = objects,
+                distributions = distributions.Select(a => a.Clone()).ToList()
+            };
             return objectDistribution;
         }
     }

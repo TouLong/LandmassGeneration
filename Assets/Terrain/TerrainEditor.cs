@@ -29,7 +29,7 @@ public class TerrainEditor : EditorWindow
     }
     void OnGUI()
     {
-        minSize = new Vector2(400, 100);
+        minSize = new Vector2(450, 100);
 
         if (!GetTerrain())
         {
@@ -51,12 +51,14 @@ public class TerrainEditor : EditorWindow
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("生成", GUILayout.MaxWidth(50));
         if (GUILayout.Button("全部", btnOption)) GenerateAll();
+        if (GUILayout.Button("地形+物件", btnOption)) GenerateChunksAndObjects();
         if (GUILayout.Button("地形", btnOption)) GenerateChunks();
         if (GUILayout.Button("導航", btnOption)) GenerateNav();
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("隨機生成", GUILayout.MaxWidth(50));
         if (GUILayout.Button("全部", btnOption)) GenerateRandomAll();
+        if (GUILayout.Button("地形+物件", btnOption)) GenerateRandomChunksAndObjects();
         if (GUILayout.Button("地形", btnOption)) GenerateRandomChunks();
         if (GUILayout.Button("物件", btnOption)) GenerateMapObject();
         EditorGUILayout.EndHorizontal();
@@ -67,54 +69,6 @@ public class TerrainEditor : EditorWindow
         if (GUILayout.Button("物件", btnOption)) ClearMapObject();
         if (GUILayout.Button("導航", btnOption)) ClearNav();
         EditorGUILayout.EndHorizontal();
-        #endregion
-        GUILine();
-
-        #region Objects And Distribution
-        ListField("地圖物件", setting.objectsDistribution.Count,
-                    () => { setting.objectsDistribution.Add(new MapSetting.ObjectDistribution()); },
-                    () => { setting.objectsDistribution.RemoveAt(setting.objectsDistribution.Count - 1); });
-        for (int i = 0; i < setting.objectsDistribution.Count; i++)
-        {
-            GUILayout.BeginVertical("Box");
-            EditorGUI.indentLevel = 1;
-            setting.objectsDistribution[i].groupName = EditorGUILayout.TextField("分類", setting.objectsDistribution[i].groupName);
-            List<GameObject> objects = setting.objectsDistribution[i].objects;
-            if (objects != null)
-            {
-                ListField("物件", objects.Count,
-                () =>
-                {
-                    objects.Add(terrain.gameObject);
-                    objects[objects.Count - 1] = null;
-                },
-                () => { objects.RemoveAt(objects.Count - 1); });
-                for (int j = 0; j < objects.Count; j++)
-                {
-                    objects[j] = EditorGUILayout.ObjectField(objects[j], typeof(GameObject), true) as GameObject;
-                }
-            }
-            List<MapSetting.ObjectDistribution.Distribution> distributions = setting.objectsDistribution[i].distributions;
-            if (distributions != null)
-            {
-                ListField("分佈", distributions.Count,
-                        () => { distributions.Add(new MapSetting.ObjectDistribution.Distribution()); },
-                        () => { distributions.RemoveAt(distributions.Count - 1); });
-                for (int j = 0; j < distributions.Count; j++)
-                {
-                    EditorGUIUtility.labelWidth = 230;
-                    distributions[j].radius = EditorGUILayout.FloatField(string.Format("分佈範圍(高度): {0:0.00} ~ {1:0.00} | 分散度: ", distributions[j].region.x, distributions[j].region.y), distributions[j].radius);
-                    EditorGUIUtility.labelWidth = 0;
-                    EditorGUILayout.MinMaxSlider(ref distributions[j].region.x, ref distributions[j].region.y, 0, setting.MapHeight);
-                }
-            }
-            EditorGUI.indentLevel = 0;
-            EditorGUIUtility.labelWidth = 0;
-            GUILayout.EndVertical();
-        }
-
-        EditorGUI.indentLevel = 0;
-        if (GUILayout.Button("更新地圖物件", btnOption)) GenerateMapObject();
         #endregion
         GUILine();
 
@@ -142,18 +96,23 @@ public class TerrainEditor : EditorWindow
         int[] layerIndeices = new int[setting.layers.Count + 1];
         string[] layerLabel = new string[setting.layers.Count + 1];
         layerIndeices[0] = -1;
-        layerLabel[0] = "null";
+        layerLabel[0] = "無";
         for (int i = 0; i < setting.layers.Count; i++)
         {
             MapSetting.Layer layer = setting.layers[i];
             layer.height = heightCurve.keys[i].value;
             float rangeMin = layer.height * setting.MapHeight;
             float rangeMax = i == setting.layers.Count - 1 ? setting.MapHeight : setting.layers[i + 1].height * setting.MapHeight;
-            string label = string.Format("區域{0}-高度:{1:0.00}~{2:0.00}", i + 1, rangeMin, rangeMax);
+            string label;
+            if (i >= setting.mountainLayer)
+                label = string.Format("地層{0}-山區-高度:{1:0.00}~{2:0.00}", i + 1, rangeMin, rangeMax);
+            else
+                label = string.Format("地層{0}-平地-高度:{1:0.00}~{2:0.00}", i + 1, rangeMin, rangeMax);
             GUILayout.Label(label, GUILayout.MaxWidth(210f));
             EditorGUILayout.BeginHorizontal();
-            layer.blendStrength = EditorGUILayout.Slider(layer.blendStrength, 0, i == 0 ? 0 : 1, GUILayout.MinWidth(80f));
             layer.color = EditorGUILayout.ColorField(layer.color, GUILayout.MinWidth(20f));
+            EditorGUILayout.LabelField("漸層", GUILayout.MaxWidth(30));
+            layer.blendStrength = EditorGUILayout.Slider(layer.blendStrength, 0, i == 0 ? 0 : 1, GUILayout.MaxWidth(150f));
             EditorGUILayout.EndHorizontal();
             layerIndeices[i + 1] = i;
             layerLabel[i + 1] = label;
@@ -170,6 +129,57 @@ public class TerrainEditor : EditorWindow
         EditorGUILayout.EndHorizontal();
         #endregion
         GUILine();
+
+        #region Objects And Distribution
+        ListField("地圖物件", setting.objectsDistribution.Count,
+                    () => { setting.objectsDistribution.Add(new MapSetting.ObjectDistribution()); },
+                    () => { setting.objectsDistribution.RemoveAt(setting.objectsDistribution.Count - 1); });
+        for (int i = 0; i < setting.objectsDistribution.Count; i++)
+        {
+            GUILayout.BeginVertical("Box");
+            EditorGUI.indentLevel = 1;
+            setting.objectsDistribution[i].groupName = EditorGUILayout.TextField("分類", setting.objectsDistribution[i].groupName);
+            List<GameObject> objects = setting.objectsDistribution[i].objects;
+            if (objects != null)
+            {
+                ListField("物件", objects.Count,
+                () => { objects.Add(null); },
+                () => { objects.RemoveAt(objects.Count - 1); });
+                for (int j = 0; j < objects.Count; j++)
+                {
+                    objects[j] = EditorGUILayout.ObjectField(objects[j], typeof(GameObject), true) as GameObject;
+                }
+            }
+            List<MapSetting.ObjectDistribution.Distribution> distributions = setting.objectsDistribution[i].distributions;
+            if (distributions != null)
+            {
+                ListField("分佈", distributions.Count,
+                        () => { distributions.Add(new MapSetting.ObjectDistribution.Distribution()); },
+                        () => { distributions.RemoveAt(distributions.Count - 1); });
+                for (int j = 0; j < distributions.Count; j++)
+                {
+                    EditorGUIUtility.labelWidth = 230;
+                    distributions[j].radius = EditorGUILayout.FloatField(string.Format("分佈範圍(高度): {0:0.00} ~ {1:0.00} | 分散度: ", distributions[j].region.x, distributions[j].region.y), distributions[j].radius);
+                    EditorGUIUtility.labelWidth = 0;
+                    //EditorGUILayout.MinMaxSlider(ref distributions[j].region.x, ref distributions[j].region.y, 0, setting.MapHeight);
+                    EditorGUILayout.MinMaxSlider(ref distributions[j].region.x, ref distributions[j].region.y, Mathf.Max(0, distributions[j].region.x - setting.MapHeight / 10), Mathf.Min(setting.MapHeight, distributions[j].region.y + setting.MapHeight / 10));
+                }
+            }
+            EditorGUI.indentLevel = 0;
+            EditorGUIUtility.labelWidth = 0;
+            GUILayout.EndVertical();
+        }
+
+        EditorGUI.indentLevel = 0;
+        if (GUILayout.Button("更新地圖物件", btnOption)) GenerateMapObject();
+        #endregion
+        GUILine();
+        //GUILayout.BeginHorizontal();
+        //GUILayout.BeginVertical();
+        //GUILayout.EndVertical();
+        //GUILayout.BeginVertical();
+        //GUILayout.EndVertical();
+        //GUILayout.EndHorizontal();
 
         #region Parameter
         setting.mapDimension = EditorGUILayout.IntSlider(string.Format("地塊數量 {1}({0}x{0})", setting.mapDimension, setting.mapDimension * setting.mapDimension), setting.mapDimension, 1, 10);
@@ -201,7 +211,7 @@ public class TerrainEditor : EditorWindow
         terrain.GenerateMapObject();
         terrain.GenerateNavMesh();
         UpdateMaterial();
-        mapImage = MapImage.Generate(setting, terrain.noise);
+        mapImage = TerrainImage(300);
     }
     void GenerateChunks()
     {
@@ -209,7 +219,12 @@ public class TerrainEditor : EditorWindow
         terrain.GenerateChunks();
         terrain.GenerateLake();
         UpdateMaterial();
-        mapImage = MapImage.Generate(setting, terrain.noise);
+        mapImage = TerrainImage(300);
+    }
+    void GenerateChunksAndObjects()
+    {
+        GenerateChunks();
+        GenerateMapObject();
     }
     void GenerateNav()
     {
@@ -225,6 +240,11 @@ public class TerrainEditor : EditorWindow
     {
         setting.seed = UnityEngine.Random.Range(-1000, 1000);
         GenerateChunks();
+    }
+    void GenerateRandomChunksAndObjects()
+    {
+        GenerateRandomChunks();
+        GenerateMapObject();
     }
     void GenerateMapObject()
     {
@@ -254,6 +274,35 @@ public class TerrainEditor : EditorWindow
     void UpdateMaterial()
     {
         terrain.UpdateMaterial();
+    }
+    Texture2D TerrainImage(int textrueSize)
+    {
+        float scale = (float)textrueSize / terrain.noise.GetLength(0);
+        Texture2D texture = new Texture2D(textrueSize, textrueSize)
+        {
+            wrapMode = TextureWrapMode.Clamp
+        };
+        Color[] colorMap = new Color[textrueSize * textrueSize];
+
+        for (int x = 0; x < textrueSize; x++)
+        {
+            for (int y = 0; y < textrueSize; y++)
+            {
+                float height = setting.heightCurve.Evaluate(terrain.noise[(int)(x / scale), (int)(y / scale)]);
+                for (int i = setting.layers.Count - 1; i >= 0; i--)
+                {
+                    if (height >= setting.layers[i].height)
+                    {
+                        Color c = setting.layers[i].color;
+                        colorMap[y * textrueSize + x] = new Color(c.r, c.g, c.b, 1);
+                        break;
+                    }
+                }
+            }
+        }
+        texture.SetPixels(0, 0, textrueSize, textrueSize, colorMap);
+        texture.Apply();
+        return texture;
     }
     void ListField(string label, int count, Action add, Action remove)
     {
