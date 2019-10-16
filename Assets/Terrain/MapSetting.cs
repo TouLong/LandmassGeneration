@@ -23,7 +23,7 @@ public class MapSetting : ScriptableObject
     public int seed;
     public Vector2 offset;
     public AnimationCurve heightCurve;
-    public int lakeLayer = -1;
+    public int waterLayer = -1;
     public int mountainLayer = -1;
     public List<Layer> layers;
     public List<ObjectDistribution> objectsDistribution;
@@ -33,6 +33,26 @@ public class MapSetting : ScriptableObject
     public int MapSideMesh => chunkMesh * mapDimension;
     public int MapSideLength => chunkMesh * mapDimension * mapScale;
     public int MapHeight => mapScale * mapHeight;
+    public float WaterHeight
+    {
+        get
+        {
+            if (layers.Count > 0 && waterLayer != -1)
+                return layers[Mathf.Min(waterLayer + 1, layers.Count - 1)].height * MapHeight;
+            else
+                return 0;
+        }
+    }
+    public float MountainHeight
+    {
+        get
+        {
+            if (layers.Count > 0 && mountainLayer != -1)
+                return layers[mountainLayer].height * MapHeight;
+            else
+                return MapHeight;
+        }
+    }
     public void CopyTo(ref MapSetting setting)
     {
         setting.mapDimension = mapDimension;
@@ -46,7 +66,7 @@ public class MapSetting : ScriptableObject
         setting.seed = seed;
         setting.offset = offset;
         setting.heightCurve = new AnimationCurve(heightCurve.keys);
-        setting.lakeLayer = lakeLayer;
+        setting.waterLayer = waterLayer;
         setting.mountainLayer = mountainLayer;
         setting.layers = layers.Select(a => a.Clone()).ToList();
         setting.objectsDistribution = objectsDistribution.Select(a => a.Clone()).ToList();

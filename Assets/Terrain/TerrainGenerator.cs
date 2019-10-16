@@ -12,10 +12,11 @@ public class TerrainGenerator : MonoBehaviour
     public float[,] noise;
     readonly string terrainGroup = "Terrain";
     readonly string objectGroup = "Objects";
+    readonly string waterGroup = "Water";
     Transform terrain;
     List<Transform> chunks;
     Transform objects;
-    Transform lake;
+    Transform water;
     void Start()
     {
         TerrainNavMesh.Load();
@@ -49,21 +50,26 @@ public class TerrainGenerator : MonoBehaviour
         objects = transform.Find(objectGroup);
         return objects != null;
     }
-    public void Generate()
+    bool GetWater()
     {
-        ClearChunks();
-        ClearNav();
-        ClearMapObject();
+        water = transform.Find(waterGroup);
+        return water != null;
+    }
+    public void GenerateAll()
+    {
         GenerateChunks();
-        GenerateLake();
+        GenerateWater();
         GenerateMapObject();
         GenerateNavMesh();
         UpdateMaterial();
     }
     public void GenerateChunks()
     {
-        terrain = new GameObject(terrainGroup).transform;
-        terrain.transform.parent = transform;
+        if (!GetTerrain())
+        {
+            terrain = new GameObject(terrainGroup).transform;
+            terrain.transform.parent = transform;
+        }
         chunks = new List<Transform>();
         TerrainHeight.Noise(out noise,
             setting.MapSideVertices, setting.seed, setting.octaves, setting.persistance, setting.lacunarity, setting.noiseScale, setting.offset);
@@ -87,37 +93,57 @@ public class TerrainGenerator : MonoBehaviour
         }
         EditorUtility.SetDirty(this);
     }
-    public void GenerateLake()
+    public void GenerateWater()
     {
-        if (lakeMaterial == null || setting.lakeLayer == 0) return;
-        lake = GameObject.CreatePrimitive(PrimitiveType.Plane).transform;
-        lake.name = "Lake";
-        lake.transform.parent = transform;
-        lake.transform.localScale = new Vector3(setting.MapSideLength / 10f, 1, setting.MapSideLength / 10f);
-        float height = setting.layers[Mathf.Min(setting.lakeLayer, setting.layers.Count - 1)].height * setting.MapHeight;
-        lake.transform.localPosition = new Vector3(setting.MapSideLength / 2f, height, setting.MapSideLength / 2f);
-        lake.transform.GetComponent<Renderer>().sharedMaterial = lakeMaterial;
-        DestroyImmediate(lake.transform.GetComponent<Collider>());
+        if (lakeMaterial == null || setting.waterLayer == -1) return;
+        water = GameObject.CreatePrimitive(PrimitiveType.Plane).transform;
+        water.name = "Water";
+        water.transform.parent = transform;
+        water.transform.localScale = new Vector3(setting.MapSideLength / 10f, 1, setting.MapSideLength / 10f);
+        water.transform.localPosition = new Vector3(setting.MapSideLength / 2f, setting.WaterHeight, setting.MapSideLength / 2f);
+        water.transform.GetComponent<Renderer>().sharedMaterial = lakeMaterial;
+        DestroyImmediate(water.transform.GetComponent<Collider>());
     }
     public void GenerateMapObject()
     {
-        objects = new GameObject(objectGroup).transform;
-        objects.transform.parent = transform;
-        objects.transform.localPosition = terrain.transform.localPosition;
+        if (!GetObjects())
+        {
+            objects = new GameObject(objectGroup).transform;
+            objects.transform.parent = transform;
+            objects.transform.localPosition = terrain.transform.localPosition;
+        }
         float regionX = setting.MapSideLength + objects.transform.localPosition.x;
         float regionY = setting.MapSideLength + objects.transform.localPosition.z;
         Vector2 regionSize = new Vector2(regionX, regionY);
         MapObjectGenerator.Generate(regionSize, setting.MapHeight, objects.transform, setting.objectsDistribution);
     }
+    public void ClearAll()
+    {
+        ClearChunks();
+        ClearWater();
+        ClearMapObject();
+        ClearNav();
+    }
     public void ClearChunks()
     {
         if (GetTerrain())
-            DestroyImmediate(terrain.gameObject);
+        {
+            while (terrain.childCount > 0)
+                DestroyImmediate(terrain.GetChild(0).gameObject);
+        }
+    }
+    public void ClearWater()
+    {
+        if (GetWater())
+            DestroyImmediate(water.gameObject);
     }
     public void ClearMapObject()
     {
         if (GetObjects())
-            DestroyImmediate(objects.gameObject);
+        {
+            while (objects.childCount > 0)
+                DestroyImmediate(objects.GetChild(0).gameObject);
+        }
     }
     public void CreateMaterial()
     {
@@ -141,15 +167,14 @@ public class TerrainGenerator : MonoBehaviour
     {
         if (GetChunks())
         {
-            Bounds bounds = new Bounds()
+            terrain.position -= Vector3.one * 0.5f;
+            Bounds bounds = new Bounds
             {
-                min = new Vector3(0, -0.5f, 0),
+                min = new Vector3(0, setting.WaterHeight > 0 ? setting.WaterHeight - 2f : setting.WaterHeight, 0),
+                max = new Vector3(setting.MapSideLength, setting.MountainHeight, setting.MapSideLength)
             };
-            if (setting.mountainLayer > -1)
-                bounds.max = new Vector3(setting.MapSideLength, setting.layers[setting.mountainLayer].height * setting.MapHeight, setting.MapSideLength);
-            else
-                bounds.max = new Vector3(setting.MapSideLength, setting.MapHeight, setting.MapSideLength);
             TerrainNavMesh.Generate(bounds, chunks.Select(a => a.GetComponent<MeshFilter>()).ToList());
+            terrain.position += Vector3.one * 0.5f;
         }
     }
     public void ClearNav()

@@ -7,11 +7,11 @@ using System;
 public class TerrainEditor : EditorWindow
 {
     TerrainGenerator terrain;
+    Texture2D terrainImage;
     GUILayoutOption[] btnOption = new GUILayoutOption[] { GUILayout.MaxWidth(200), GUILayout.Height(20) };
     MapSetting setting;
-    MapSetting exportSetting;
     Vector2 scrollPos;
-    Texture2D mapImage;
+    List<bool> mapObjectExpand = new List<bool>();
     [MenuItem("Window/Terrain Editor")]
     public static void ShowWindow()
     {
@@ -47,7 +47,7 @@ public class TerrainEditor : EditorWindow
         #region Main And Image
         GUILayout.Label(string.Format("地圖尺寸: {0}x{0}x{1}, 地圖網格: {2}x{2}",
         setting.MapSideLength, setting.MapHeight, setting.MapSideMesh));
-        GUILayout.Label(mapImage);
+        GUILayout.Label(terrainImage);
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("生成", GUILayout.MaxWidth(50));
         if (GUILayout.Button("全部", btnOption)) GenerateAll();
@@ -106,6 +106,8 @@ public class TerrainEditor : EditorWindow
             string label;
             if (i >= setting.mountainLayer)
                 label = string.Format("地層{0}-山區-高度:{1:0.00}~{2:0.00}", i + 1, rangeMin, rangeMax);
+            else if (i <= setting.waterLayer)
+                label = string.Format("地層{0}-水域-高度:{1:0.00}~{2:0.00}", i + 1, rangeMin, rangeMax);
             else
                 label = string.Format("地層{0}-平地-高度:{1:0.00}~{2:0.00}", i + 1, rangeMin, rangeMax);
             GUILayout.Label(label, GUILayout.MaxWidth(210f));
@@ -121,24 +123,41 @@ public class TerrainEditor : EditorWindow
         EditorGUILayout.CurveField(heightCurve, GUILayout.MinHeight(100f));
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.ObjectField("地形材質", terrain.terrainMaterial, typeof(Material), true);
-        EditorGUILayout.ObjectField("湖面材質", terrain.lakeMaterial, typeof(Material), true);
+        terrain.lakeMaterial = EditorGUILayout.ObjectField("水域材質", terrain.lakeMaterial, typeof(Material), true) as Material;
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.BeginHorizontal();
         setting.mountainLayer = EditorGUILayout.IntPopup("山區", setting.mountainLayer, layerLabel, layerIndeices);
-        setting.lakeLayer = EditorGUILayout.IntPopup("湖面", setting.lakeLayer, layerLabel, layerIndeices);
+        setting.waterLayer = EditorGUILayout.IntPopup("水域", setting.waterLayer, layerLabel, layerIndeices);
         EditorGUILayout.EndHorizontal();
         #endregion
         GUILine();
 
         #region Objects And Distribution
+        layerLabel[0] = "選擇地層";
+        if (mapObjectExpand.Count != setting.objectsDistribution.Count)
+        {
+            mapObjectExpand = new List<bool>();
+            while (mapObjectExpand.Count != setting.objectsDistribution.Count)
+                mapObjectExpand.Add(true);
+        }
         ListField("地圖物件", setting.objectsDistribution.Count,
-                    () => { setting.objectsDistribution.Add(new MapSetting.ObjectDistribution()); },
-                    () => { setting.objectsDistribution.RemoveAt(setting.objectsDistribution.Count - 1); });
+                    () => { setting.objectsDistribution.Add(new MapSetting.ObjectDistribution()); mapObjectExpand.Add(true); },
+                    () => { setting.objectsDistribution.RemoveAt(setting.objectsDistribution.Count - 1); mapObjectExpand.RemoveAt(mapObjectExpand.Count - 1); });
         for (int i = 0; i < setting.objectsDistribution.Count; i++)
         {
             GUILayout.BeginVertical("Box");
+            GUILayout.BeginHorizontal();
+            string group = setting.objectsDistribution[i].groupName;
+            setting.objectsDistribution[i].groupName = EditorGUILayout.TextField("群組", group != null && group != "" ? group : "Group" + (i + 1).ToString());
+            if (GUILayout.Button(mapObjectExpand[i] ? "v" : "<", GUILayout.MaxWidth(20)))
+                mapObjectExpand[i] = !mapObjectExpand[i];
+            GUILayout.EndHorizontal();
+            if (!mapObjectExpand[i])
+            {
+                GUILayout.EndVertical();
+                continue;
+            }
             EditorGUI.indentLevel = 1;
-            setting.objectsDistribution[i].groupName = EditorGUILayout.TextField("分類", setting.objectsDistribution[i].groupName);
             List<GameObject> objects = setting.objectsDistribution[i].objects;
             if (objects != null)
             {
@@ -158,11 +177,28 @@ public class TerrainEditor : EditorWindow
                         () => { distributions.RemoveAt(distributions.Count - 1); });
                 for (int j = 0; j < distributions.Count; j++)
                 {
-                    EditorGUIUtility.labelWidth = 230;
-                    distributions[j].radius = EditorGUILayout.FloatField(string.Format("分佈範圍(高度): {0:0.00} ~ {1:0.00} | 分散度: ", distributions[j].region.x, distributions[j].region.y), distributions[j].radius);
+                    EditorGUI.indentLevel = 1;
+                    GUILayout.BeginHorizontal();
+                    EditorGUIUtility.labelWidth = 60;
+                    EditorGUIUtility.fieldWidth = 30;
+                    distributions[j].radius = EditorGUILayout.FloatField("分散度: ", distributions[j].radius);
+                    EditorGUI.indentLevel = 0;
+                    EditorGUIUtility.labelWidth = 90;
+                    EditorGUIUtility.fieldWidth = 40;
+                    distributions[j].region.x = (float)Math.Round(EditorGUILayout.FloatField("分佈範圍(高度): ", distributions[j].region.x), 2);
+                    EditorGUIUtility.labelWidth = 10;
+                    distributions[j].region.y = (float)Math.Round(EditorGUILayout.FloatField("~", distributions[j].region.y), 2);
+                    EditorGUIUtility.fieldWidth = 0;
                     EditorGUIUtility.labelWidth = 0;
+                    int selectLayer = EditorGUILayout.IntPopup(-1, layerLabel, layerIndeices, GUILayout.MaxWidth(80));
+                    if (selectLayer > -1)
+                    {
+                        distributions[j].region = new Vector2(setting.layers[selectLayer].height * setting.MapHeight,
+                            selectLayer == setting.layers.Count - 1 ? setting.MapHeight : setting.layers[selectLayer + 1].height * setting.MapHeight);
+                    }
                     //EditorGUILayout.MinMaxSlider(ref distributions[j].region.x, ref distributions[j].region.y, 0, setting.MapHeight);
                     EditorGUILayout.MinMaxSlider(ref distributions[j].region.x, ref distributions[j].region.y, Mathf.Max(0, distributions[j].region.x - setting.MapHeight / 10), Mathf.Min(setting.MapHeight, distributions[j].region.y + setting.MapHeight / 10));
+                    GUILayout.EndHorizontal();
                 }
             }
             EditorGUI.indentLevel = 0;
@@ -174,12 +210,6 @@ public class TerrainEditor : EditorWindow
         if (GUILayout.Button("更新地圖物件", btnOption)) GenerateMapObject();
         #endregion
         GUILine();
-        //GUILayout.BeginHorizontal();
-        //GUILayout.BeginVertical();
-        //GUILayout.EndVertical();
-        //GUILayout.BeginVertical();
-        //GUILayout.EndVertical();
-        //GUILayout.EndHorizontal();
 
         #region Parameter
         setting.mapDimension = EditorGUILayout.IntSlider(string.Format("地塊數量 {1}({0}x{0})", setting.mapDimension, setting.mapDimension * setting.mapDimension), setting.mapDimension, 1, 10);
@@ -203,23 +233,17 @@ public class TerrainEditor : EditorWindow
     }
     void GenerateAll()
     {
-        terrain.ClearChunks();
-        terrain.ClearNav();
-        terrain.ClearMapObject();
-        terrain.GenerateChunks();
-        terrain.GenerateLake();
-        terrain.GenerateMapObject();
-        terrain.GenerateNavMesh();
-        UpdateMaterial();
-        mapImage = TerrainImage(300);
+        terrain.ClearAll();
+        terrain.GenerateAll();
+        terrainImage = TerrainImage(300);
     }
     void GenerateChunks()
     {
-        terrain.ClearChunks();
+        ClearChunks();
         terrain.GenerateChunks();
-        terrain.GenerateLake();
+        terrain.GenerateWater();
         UpdateMaterial();
-        mapImage = TerrainImage(300);
+        terrainImage = TerrainImage(300);
     }
     void GenerateChunksAndObjects()
     {
@@ -253,10 +277,8 @@ public class TerrainEditor : EditorWindow
     }
     void ClearAll()
     {
-        terrain.ClearChunks();
-        terrain.ClearNav();
-        terrain.ClearMapObject();
-        mapImage = new Texture2D(0, 0);
+        terrain.ClearAll();
+        terrainImage = new Texture2D(0, 0);
     }
     void ClearNav()
     {
@@ -269,7 +291,8 @@ public class TerrainEditor : EditorWindow
     void ClearChunks()
     {
         terrain.ClearChunks();
-        mapImage = new Texture2D(0, 0);
+        terrain.ClearWater();
+        terrainImage = new Texture2D(0, 0);
     }
     void UpdateMaterial()
     {
