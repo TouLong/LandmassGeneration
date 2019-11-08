@@ -11,7 +11,6 @@ public class MapObjectGenerator
         public float regionMin;
         public float regionMax;
         public List<GameObject> mapObjects;
-        public string name;
         public Transform parent;
         public MapObjectData(float radius)
         {
@@ -167,6 +166,7 @@ public class MapObjectGenerator
         if (prefab != null)
         {
             GameObject go = Object.Instantiate(prefab, position, Quaternion.identity, objectData.parent);
+            go.name = string.Format("{0}-{1}", objectData.parent.name, objectData.parent.childCount);
             GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.NavigationStatic);
         }
     }
