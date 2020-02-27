@@ -20,7 +20,7 @@ MonoBehaviour:
   octaves: 3
   lacunarity: 2
   persistance: 0.5
-  seed: 597
+  seed: -840
   offset: {x: 0, y: 0}
   heightCurve:
     serializedVersion: 2
