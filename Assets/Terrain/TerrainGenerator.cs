@@ -11,11 +11,9 @@ public class TerrainGenerator : MonoBehaviour
     [HideInInspector] public Material lakeMaterial;
     public float[,] noise;
     readonly string terrainGroup = "Terrain";
-    readonly string objectGroup = "Objects";
     readonly string waterGroup = "Water";
     Transform terrain;
     List<Transform> chunks;
-    Transform objects;
     Transform water;
     void Start()
     {
@@ -44,11 +42,6 @@ public class TerrainGenerator : MonoBehaviour
         {
             return false;
         }
-    }
-    bool GetObjects()
-    {
-        objects = transform.Find(objectGroup);
-        return objects != null;
     }
     bool GetWater()
     {
@@ -106,22 +99,16 @@ public class TerrainGenerator : MonoBehaviour
     }
     public void GenerateMapObject()
     {
-        if (!GetObjects())
-        {
-            objects = new GameObject(objectGroup).transform;
-            objects.transform.parent = transform;
-            objects.transform.localPosition = terrain.transform.localPosition;
-        }
-        float regionX = setting.MapSideLength + objects.transform.localPosition.x;
-        float regionY = setting.MapSideLength + objects.transform.localPosition.z;
+        float regionX = setting.MapSideLength + transform.localPosition.x;
+        float regionY = setting.MapSideLength + transform.localPosition.z;
         Vector2 regionSize = new Vector2(regionX, regionY);
-        MapObjectGenerator.Generate(regionSize, setting.MapHeight, objects.transform, setting.objectsDistribution);
+        MapObjectGenerator.Generate(regionSize, setting.MapHeight, transform, setting.objectsDistribution);
     }
     public void ClearAll()
     {
         ClearChunks();
         ClearWater();
-        ClearMapObject();
+        ClearMapObjects();
         ClearNav();
     }
     public void ClearChunks()
@@ -131,19 +118,22 @@ public class TerrainGenerator : MonoBehaviour
             while (terrain.childCount > 0)
                 DestroyImmediate(terrain.GetChild(0).gameObject);
         }
+        if (terrain != null)
+            DestroyImmediate(terrain.gameObject);
+    }
+    public void ClearMapObjects()
+    {
+        foreach (MapSetting.ObjectDistribution objectDistribution in setting.objectsDistribution)
+        {
+            Transform delTransform = transform.Find(objectDistribution.groupName);
+            if (delTransform != null)
+                DestroyImmediate(delTransform.gameObject);
+        }
     }
     public void ClearWater()
     {
         if (GetWater())
             DestroyImmediate(water.gameObject);
-    }
-    public void ClearMapObject()
-    {
-        if (GetObjects())
-        {
-            while (objects.childCount > 0)
-                DestroyImmediate(objects.GetChild(0).gameObject);
-        }
     }
     public void CreateMaterial()
     {

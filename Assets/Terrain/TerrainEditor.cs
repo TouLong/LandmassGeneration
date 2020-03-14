@@ -272,7 +272,7 @@ public class TerrainEditor : EditorWindow
     }
     void GenerateMapObject()
     {
-        terrain.ClearMapObject();
+        terrain.ClearMapObjects();
         terrain.GenerateMapObject();
     }
     void ClearAll()
@@ -286,7 +286,7 @@ public class TerrainEditor : EditorWindow
     }
     void ClearMapObject()
     {
-        terrain.ClearMapObject();
+        terrain.ClearMapObjects();
     }
     void ClearChunks()
     {

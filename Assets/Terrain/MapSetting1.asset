@@ -10,17 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9400f869c790725468864517712c999f, type: 3}
-  m_Name: TestMapSetting
+  m_Name: MapSetting1
   m_EditorClassIdentifier: 
   mapDimension: 1
   chunkMesh: 150
-  mapHeight: 10
+  mapHeight: 15
   mapScale: 10
-  noiseScale: 25
+  noiseScale: 40
   octaves: 3
   lacunarity: 2
   persistance: 0.5
-  seed: 596
+  seed: -229
   offset: {x: 0, y: 0}
   heightCurve:
     serializedVersion: 2
@@ -38,41 +38,41 @@ MonoBehaviour:
       time: 0.1388589
       value: 0.043492068
       inSlope: 1.2940316
-      outSlope: 0.52123547
+      outSlope: 0.18466
       tangentMode: 65
       weightedMode: 0
       inWeight: 0.27831122
       outWeight: 0.33333334
     - serializedVersion: 3
-      time: 0.32490578
-      value: 0.1404663
-      inSlope: 0.52123547
-      outSlope: 0.37713346
+      time: 0.39590472
+      value: 0.09095815
+      inSlope: 0.18466
+      outSlope: 0.47347423
       tangentMode: 69
       weightedMode: 0
       inWeight: 0.42537168
       outWeight: 0.36650285
     - serializedVersion: 3
-      time: 0.4523897
-      value: 0.18854475
-      inSlope: 0.43422678
-      outSlope: 0.43422678
+      time: 0.46752596
+      value: 0.12486896
+      inSlope: 0.7464719
+      outSlope: 0.7464719
       tangentMode: 0
       weightedMode: 0
       inWeight: 0.33333334
-      outWeight: 0.33333334
+      outWeight: 1
     - serializedVersion: 3
-      time: 0.5131249
-      value: 0.2186384
-      inSlope: 0.6971687
-      outSlope: 0.6971687
+      time: 0.5418258
+      value: 0.1950535
+      inSlope: 1.2059007
+      outSlope: 1.2059007
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
+      inWeight: 0.58794445
+      outWeight: 1
     - serializedVersion: 3
-      time: 0.5450138
-      value: 0.25567192
+      time: 0.57371473
+      value: 0.24859644
       inSlope: 1.7420968
       outSlope: 1.7420968
       tangentMode: 0
@@ -101,37 +101,15 @@ MonoBehaviour:
     height: 0.043492068
     blendStrength: 0.07
   - color: {r: 0.14901961, g: 0.6509804, b: 0.04705883, a: 0}
-    height: 0.1404663
+    height: 0.09095815
     blendStrength: 0.55
   - color: {r: 0.7058824, g: 0.6862745, b: 0.1764706, a: 0}
-    height: 0.18854475
+    height: 0.12486896
     blendStrength: 0.27
   - color: {r: 0.7058824, g: 0.6862745, b: 0.1764706, a: 0}
-    height: 0.2186384
+    height: 0.1950535
     blendStrength: 0
   - color: {r: 0.5176471, g: 0.5176471, b: 0.5019608, a: 0}
-    height: 0.25567192
+    height: 0.24859644
     blendStrength: 0.77
-  objectsDistribution:
-  - groupName: Tree
-    objects:
-    - {fileID: 8227614148363476358, guid: 63ce3b8078d062841bbbda8917caebd8, type: 3}
-    distributions:
-    - region: {x: 4.35, y: 14.05}
-      radius: 60
-    - region: {x: 14.05, y: 18.85}
-      radius: 30
-  - groupName: Rock
-    objects:
-    - {fileID: 4336003327697532154, guid: 1036f01fba915bc43b1d5bc1299066bc, type: 3}
-    distributions:
-    - region: {x: 4.35, y: 14.05}
-      radius: 60
-    - region: {x: 18.85, y: 20.05}
-      radius: 30
-  - groupName: Ore
-    objects:
-    - {fileID: 2044110847662040943, guid: e579e1a183bde3b4caf7cbff3ca78006, type: 3}
-    distributions:
-    - region: {x: 20.05, y: 21.86}
-      radius: 10
+  objectsDistribution: []
