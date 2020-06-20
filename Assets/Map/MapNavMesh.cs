@@ -3,9 +3,9 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 
-public static class TerrainNavMesh
+public static class MapNavMesh
 {
-    static readonly string path = "Assets/Terrain/NavMesh.asset";
+    static readonly string path = "Assets/Map/NavMesh.asset";
     public static void Load()
     {
         NavMeshData navMeshData = AssetDatabase.LoadAssetAtPath<NavMeshData>(path) as NavMeshData;
@@ -15,7 +15,7 @@ public static class TerrainNavMesh
             NavMesh.AddNavMeshData(navMeshData);
         }
     }
-    public static void Generate(Bounds bounds, List<MeshFilter> meshFilters)
+    public static void Generate(Bounds bounds, MeshFilter[] meshFilters)
     {
         List<NavMeshBuildSource> meshBuildSources = new List<NavMeshBuildSource>();
         foreach (MeshFilter meshFilter in meshFilters)

@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9400f869c790725468864517712c999f, type: 3}
   m_Name: MapSetting1
   m_EditorClassIdentifier: 
-  mapDimension: 1
-  chunkMesh: 150
+  mapDimension: 3
+  chunkMesh: 10
   mapHeight: 15
   mapScale: 10
   noiseScale: 40
   octaves: 3
   lacunarity: 2
   persistance: 0.5
-  seed: -229
+  seed: -907
   offset: {x: 0, y: 0}
   heightCurve:
     serializedVersion: 2
@@ -91,6 +91,9 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 0
   waterLayer: 0
   mountainLayer: 3
   layers:
