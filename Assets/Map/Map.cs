@@ -13,9 +13,12 @@ public class Map : MonoBehaviour
     readonly string waterGroup = "Water";
     Transform terrain;
     Transform water;
-    MapChunk[,] chunks;
-    void Start()
+    static MapChunk[,] chunks;
+    static int sideLength;
+    static int chunkSize;
+    void Awake()
     {
+        GenerateChunkData(false);
         MapNavMesh.Load();
     }
     void Update()
@@ -33,13 +36,13 @@ public class Map : MonoBehaviour
         water = transform.Find(waterGroup);
         return water != null;
     }
-    public MapChunk GetChunk(float x, float y)
+    static public MapChunk GetChunk(float x, float y)
     {
-        return chunks[(int)(x / setting.ChunkSize), (int)(y / setting.ChunkSize)];
+        return chunks[(int)(x / chunkSize), (int)(y / chunkSize)];
     }
-    public float GetHeight(float x, float y)
+    static public float GetHeight(float x, float y)
     {
-        if (x > setting.MapSideLength || y > setting.MapSideLength || x < 0 || y < 0)
+        if (x > sideLength || y > sideLength || x < 0 || y < 0)
         {
             return 0;
         }
@@ -49,9 +52,9 @@ public class Map : MonoBehaviour
         Vector3 normal = mesh.GetNormal(x, y);
         return (normal.x * (x - vertex.x) + normal.z * (y - vertex.z)) / -normal.y + vertex.y;
     }
-    public Vector3 GetNormal(float x, float y)
+    static public Vector3 GetNormal(float x, float y)
     {
-        if (x > setting.MapSideLength || y > setting.MapSideLength || x < 0 || y < 0)
+        if (x > sideLength || y > sideLength || x < 0 || y < 0)
         {
             return Vector3.up;
         }
@@ -59,40 +62,49 @@ public class Map : MonoBehaviour
     }
     public void GenerateAll()
     {
-        GenerateChunks();
+        GenerateChunkData(true);
         GenerateWater();
         GenerateMapObject();
         GenerateNavMesh();
         UpdateMaterial();
     }
-    public void GenerateChunks()
+    public void GenerateChunkData(bool genObject)
     {
-        if (!GetTerrain())
-        {
-            terrain = new GameObject(terrainGroup).transform;
-            terrain.transform.parent = transform;
-        }
+        sideLength = setting.MapSideLength;
+        chunkSize = setting.ChunkSize;
         chunks = new MapChunk[setting.mapDimension, setting.mapDimension];
         TerrainHeight.Noise(ref noiseHeights, setting.MapSideVertices, setting.seed, setting.octaves, setting.persistance, setting.lacunarity, setting.noiseScale, setting.offset);
         for (int x = 0; x < setting.mapDimension; x++)
         {
             for (int y = 0; y < setting.mapDimension; y++)
             {
-                GameObject chunk = new GameObject(string.Format("{0},{1}", x, y));
-                chunk.transform.parent = terrain.transform;
-                chunk.transform.localPosition = new Vector3(x * setting.ChunkSize, 0, y * setting.ChunkSize);
-                if (setting.layerMask > 0)
-                    chunk.layer = setting.layerMask;
                 Vector2Int offset = new Vector2Int(x * setting.chunkMesh, y * setting.chunkMesh);
                 TerrainHeight.Evaluate(out float[,] chunkHeights, ref noiseHeights, offset, setting.ChunkVertices, setting.mapScale, setting.mapHeight, setting.heightCurve);
                 chunks[x, y] = new MapChunk(chunkHeights, setting.chunkMesh, offset, setting.mapScale);
-                Mesh mesh = ChunkMeshGenerator.Generate(chunkHeights, setting.mapScale);
-                chunk.AddComponent<MeshFilter>().mesh = mesh;
-                chunk.AddComponent<MeshCollider>().sharedMesh = mesh;
-                chunk.AddComponent<MeshRenderer>().material = terrainMaterial;
-                GameObjectUtility.SetStaticEditorFlags(chunk, StaticEditorFlags.NavigationStatic);
+                if (genObject)
+                {
+                    GenerateChunkObject(x, y, chunkHeights);
+                }
             }
         }
+    }
+    public void GenerateChunkObject(int x, int y, float[,] chunkHeights)
+    {
+        if (!GetTerrain())
+        {
+            terrain = new GameObject(terrainGroup).transform;
+            terrain.transform.parent = transform;
+        }
+        GameObject chunk = new GameObject(string.Format("{0},{1}", x, y));
+        chunk.transform.parent = terrain.transform;
+        chunk.transform.localPosition = new Vector3(x * setting.ChunkSize, 0, y * setting.ChunkSize);
+        if (setting.layerMask > 0)
+            chunk.layer = setting.layerMask;
+        Mesh mesh = ChunkMeshGenerator.Generate(chunkHeights, setting.mapScale);
+        chunk.AddComponent<MeshFilter>().mesh = mesh;
+        chunk.AddComponent<MeshCollider>().sharedMesh = mesh;
+        chunk.AddComponent<MeshRenderer>().material = terrainMaterial;
+        GameObjectUtility.SetStaticEditorFlags(chunk, StaticEditorFlags.NavigationStatic);
         EditorUtility.SetDirty(this);
     }
     public void GenerateWater()

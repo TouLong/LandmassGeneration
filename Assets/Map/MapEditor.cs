@@ -242,7 +242,7 @@ public class MapEditor : EditorWindow
     void GenerateChunks()
     {
         ClearChunks();
-        map.GenerateChunks();
+        map.GenerateChunkData(true);
         map.GenerateWater();
         UpdateMaterial();
         mapImage = TerrainImage(300);
