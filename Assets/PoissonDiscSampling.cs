@@ -143,6 +143,7 @@ public class PoissonDiscSampling : MonoBehaviour
         }
     }
 }
+#if UNITY_EDITOR
 [CustomEditor(typeof(PoissonDiscSampling))]
 public class PoissonDiscSamplingEditor : Editor
 {
@@ -166,3 +167,4 @@ public class PoissonDiscSamplingEditor : Editor
     }
 
 }
+#endif

@@ -1,10 +1,14 @@
 ﻿using UnityEngine;
+using UnityEngine.AI;
 using System.Linq;
 using UnityEditor;
+using System.Collections.Generic;
+using System.IO;
 
 [ExecuteInEditMode]
 public class Map : MonoBehaviour
 {
+    public NavMeshData navMesh;
     public MapSetting setting;
     [HideInInspector] public float[,] noiseHeights;
     [HideInInspector] public Material terrainMaterial;
@@ -18,13 +22,19 @@ public class Map : MonoBehaviour
     static int chunkSize;
     void Awake()
     {
-        GenerateChunkData(false);
-        MapNavMesh.Load();
+        if (setting != null)
+        {
+            ConfigChunkData();
+            UpdateMaterial();
+        }
+        if (navMesh != null)
+        {
+            NavMesh.RemoveAllNavMeshData();
+            NavMesh.AddNavMeshData(navMesh);
+        }
     }
     void Update()
     {
-        if (setting != null)
-            UpdateMaterial();
     }
     bool GetTerrain()
     {
@@ -60,15 +70,7 @@ public class Map : MonoBehaviour
         }
         return GetChunk(x, y).GetMesh(x, y).GetNormal(x, y);
     }
-    public void GenerateAll()
-    {
-        GenerateChunkData(true);
-        GenerateWater();
-        GenerateMapObject();
-        GenerateNavMesh();
-        UpdateMaterial();
-    }
-    public void GenerateChunkData(bool genObject)
+    public void ConfigChunkData()
     {
         sideLength = setting.MapSideLength;
         chunkSize = setting.ChunkSize;
@@ -81,6 +83,45 @@ public class Map : MonoBehaviour
                 Vector2Int offset = new Vector2Int(x * setting.chunkMesh, y * setting.chunkMesh);
                 TerrainHeight.Evaluate(out float[,] chunkHeights, ref noiseHeights, offset, setting.ChunkVertices, setting.mapScale, setting.mapHeight, setting.heightCurve);
                 chunks[x, y] = new MapChunk(chunkHeights, setting.chunkMesh, offset, setting.mapScale);
+            }
+        }
+    }
+    public void CreateMaterial()
+    {
+        terrainMaterial = new Material(Shader.Find("Custom/Terrain"));
+    }
+    public void UpdateMaterial()
+    {
+        if (GetTerrain() && setting.layers.Count > 0)
+        {
+            if (terrainMaterial == null)
+                CreateMaterial();
+            terrainMaterial.SetInt("layerCount", setting.layers.Count);
+            terrainMaterial.SetColorArray("baseColors", setting.layers.Select(x => x.color).ToArray());
+            terrainMaterial.SetFloatArray("baseStartHeights", setting.layers.Select(x => x.height).ToArray());
+            terrainMaterial.SetFloatArray("baseBlends", setting.layers.Select(x => x.blendStrength).ToArray());
+            terrainMaterial.SetFloat("minHeight", terrain.position.y);
+            terrainMaterial.SetFloat("maxHeight", setting.MapHeight + terrain.position.y);
+        }
+    }
+#if UNITY_EDITOR
+    public void GenerateAll()
+    {
+        GenerateChunkData(true);
+        GenerateWater();
+        GenerateMapObject();
+        GenerateNavMesh();
+        UpdateMaterial();
+    }
+    public void GenerateChunkData(bool genObject)
+    {
+        ConfigChunkData();
+        for (int x = 0; x < setting.mapDimension; x++)
+        {
+            for (int y = 0; y < setting.mapDimension; y++)
+            {
+                Vector2Int offset = new Vector2Int(x * setting.chunkMesh, y * setting.chunkMesh);
+                TerrainHeight.Evaluate(out float[,] chunkHeights, ref noiseHeights, offset, setting.ChunkVertices, setting.mapScale, setting.mapHeight, setting.heightCurve);
                 if (genObject)
                 {
                     GenerateChunkObject(x, y, chunkHeights);
@@ -156,43 +197,49 @@ public class Map : MonoBehaviour
         if (GetWater())
             DestroyImmediate(water.gameObject);
     }
-    public void CreateMaterial()
-    {
-        terrainMaterial = new Material(Shader.Find("Custom/Terrain"));
-    }
-    public void UpdateMaterial()
-    {
-        if (GetTerrain() && setting.layers.Count > 0)
-        {
-            if (terrainMaterial == null)
-                CreateMaterial();
-            terrainMaterial.SetInt("layerCount", setting.layers.Count);
-            terrainMaterial.SetColorArray("baseColors", setting.layers.Select(x => x.color).ToArray());
-            terrainMaterial.SetFloatArray("baseStartHeights", setting.layers.Select(x => x.height).ToArray());
-            terrainMaterial.SetFloatArray("baseBlends", setting.layers.Select(x => x.blendStrength).ToArray());
-            terrainMaterial.SetFloat("minHeight", terrain.position.y);
-            terrainMaterial.SetFloat("maxHeight", setting.MapHeight + terrain.position.y);
-        }
-    }
+
     public void GenerateNavMesh()
     {
         if (GetTerrain())
         {
-            terrain.position -= Vector3.one * 0.5f;
-            Bounds bounds = new Bounds
+            if (navMesh != null)
             {
-                min = new Vector3(0, setting.WaterHeight > 0 ? setting.WaterHeight - 2f : setting.WaterHeight, 0),
-                max = new Vector3(setting.MapSideLength, setting.MountainHeight, setting.MapSideLength)
-            };
-            MeshFilter[] meshFilters = terrain.GetComponentsInChildren<MeshFilter>();
-            MapNavMesh.Generate(bounds, meshFilters);
-            terrain.position += Vector3.one * 0.5f;
+                terrain.position -= Vector3.one * 0.5f;
+                Bounds bounds = new Bounds
+                {
+                    min = new Vector3(0, setting.WaterHeight > 0 ? setting.WaterHeight - 2f : setting.WaterHeight, 0),
+                    max = new Vector3(setting.MapSideLength, setting.MountainHeight, setting.MapSideLength)
+                };
+                MeshFilter[] meshFilters = terrain.GetComponentsInChildren<MeshFilter>();
+                List<NavMeshBuildSource> meshBuildSources = new List<NavMeshBuildSource>();
+                foreach (MeshFilter meshFilter in meshFilters)
+                {
+                    meshBuildSources.Add(new NavMeshBuildSource()
+                    {
+                        shape = NavMeshBuildSourceShape.Mesh,
+                        sourceObject = meshFilter.sharedMesh,
+                        transform = meshFilter.transform.localToWorldMatrix,
+                    });
+                }
+                terrain.position += Vector3.one * 0.5f;
+
+                NavMeshBuildSettings settings = NavMesh.GetSettingsByIndex(0);
+                NavMeshData newNavMeshData = NavMeshBuilder.BuildNavMeshData(settings, meshBuildSources, bounds, bounds.min, Quaternion.identity);
+                NavMesh.AddNavMeshData(newNavMeshData);
+                newNavMeshData.name = navMesh.name;
+                EditorUtility.CopySerialized(newNavMeshData, navMesh);
+            }
+            else
+            {
+                print("沒導航設定檔");
+            }
         }
     }
     public void ClearNav()
     {
-        MapNavMesh.Clear();
+        NavMesh.RemoveAllNavMeshData();
     }
+#endif
 }
 public class MapChunkMesh
 {

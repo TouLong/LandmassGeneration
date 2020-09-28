@@ -1,15 +1,17 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using UnityEngine.AI;
 using System.Linq;
 using System.Collections.Generic;
 using System;
-
+#if UNITY_EDITOR
 public class MapEditor : EditorWindow
 {
     Map map;
     Texture2D mapImage;
     GUILayoutOption[] btnOption = new GUILayoutOption[] { GUILayout.MaxWidth(200), GUILayout.Height(20) };
     MapSetting setting;
+    NavMeshData navMesh;
     Vector2 scrollPos;
     List<bool> mapObjectExpand = new List<bool>();
     [MenuItem("Window/Map Editor")]
@@ -37,6 +39,7 @@ public class MapEditor : EditorWindow
             return;
         }
         map.setting = EditorGUILayout.ObjectField("設定檔", map.setting, typeof(MapSetting), true) as MapSetting;
+        map.navMesh = EditorGUILayout.ObjectField("導航設定檔", map.navMesh, typeof(NavMeshData), true) as NavMeshData;
         if (!GetSetting())
         {
             GUILayout.Label("Map沒Setting檔");
@@ -231,6 +234,8 @@ public class MapEditor : EditorWindow
 
         EditorGUILayout.EndScrollView();
         EditorUtility.SetDirty(setting);
+        if (map.navMesh != null)
+            EditorUtility.SetDirty(map.navMesh);
 
     }
     void GenerateAll()
@@ -349,3 +354,4 @@ public class MapEditor : EditorWindow
     }
 
 }
+#endif
